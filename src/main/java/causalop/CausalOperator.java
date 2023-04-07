@@ -22,6 +22,15 @@ public class CausalOperator<T> implements ObservableOperator<T, CausalMessage<T>
         this.messageBuffer = new ArrayList<>();
     }
 
+
+    private boolean isOutDated(CausalMessage<T> m){
+        int[] clock = m.vv;
+        boolean flag = false;
+        if (vv[m.j] + 1 > clock[m.j]){
+            flag = true;
+        }
+        return flag;
+    }
     private boolean check(CausalMessage<T> m){
         int[] clock = m.vv;
 
@@ -41,6 +50,7 @@ public class CausalOperator<T> implements ObservableOperator<T, CausalMessage<T>
 
 
 
+
     @Override
     public @NonNull Observer<? super CausalMessage<T>> apply(@NonNull Observer<? super T> down) throws Throwable {
         return new DisposableObserver<CausalMessage<T>>() {
@@ -49,7 +59,10 @@ public class CausalOperator<T> implements ObservableOperator<T, CausalMessage<T>
                 messageBuffer.add(m);
                 for ( Iterator<CausalMessage<T>> it = messageBuffer.listIterator();it.hasNext();){
                     CausalMessage<T> cm = it.next();
-                    if (check(cm)){
+                    if(isOutDated(cm)){
+                        it.remove();
+                    }
+                    else if (check(cm)){
                         vv[m.j]++;
                         down.onNext(cm.payload);
                         it.remove();
