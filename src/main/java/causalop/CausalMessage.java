@@ -2,7 +2,7 @@ package causalop;
 
 import java.nio.ByteBuffer;
 
-public class CausalMessage<T> {
+public class CausalMessage<T> implements Message {
     int j;
     int[] vv;
     public T payload;
@@ -20,7 +20,7 @@ public class CausalMessage<T> {
             payloadBytes = payload.toString().getBytes();
             payloadLength = payloadBytes.length;
         }
-        ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES + Integer.BYTES + Integer.BYTES * vv.length + payloadLength);
+        ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES + Integer.BYTES + Integer.BYTES + Integer.BYTES * vv.length + payloadLength);
         buffer.putInt(j);
         buffer.putInt(vv.length);
         for (int v : vv) {
@@ -40,6 +40,7 @@ public class CausalMessage<T> {
         for (int i = 0; i < vvLength; i++) {
             vv[i] = buffer.getInt();
         }
+
         byte[] payloadBytes = new byte[buffer.remaining()];
         buffer.get(payloadBytes);
         String payloadString = new String(payloadBytes);
@@ -50,4 +51,8 @@ public class CausalMessage<T> {
         return new CausalMessage<T>(payload, j, vv);
     }
 
+    @Override
+    public int getType() {
+        return 0;
+    }
 }

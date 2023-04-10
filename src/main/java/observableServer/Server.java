@@ -1,16 +1,19 @@
 package observableServer;
 
+import causalop.CausalMessageReader;
+import causalop.CausalOperator;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
-import java.nio.charset.StandardCharsets;
 
 public class Server {
-    public static void main(String args[]){
+    public static void main(String args[]) throws IOException {
 
         // TODO: Parse the args to retrieve number of nodes
 
-
+        int n = 5;
+        //CBCast<String> cbCast = new CBCast<>(n,0);
         ServerSocketChannel ss= null;
         try {
             ss = ServerSocketChannel.open();
@@ -20,12 +23,15 @@ public class Server {
             var server = loop.accept(ss);
 
             // Subscribe method catches the onNext callbacks
+            CausalOperator co = new CausalOperator(n);
             server.subscribe(conn -> {
-                var coisas = loop.read(conn);
-                //coisas.lift(new CausalOperator<String>(2))
-                coisas.map(bb -> StandardCharsets.UTF_8.decode(bb))
-                        .subscribe(s -> System.out.println(s));
+                var in = loop.read(conn)
+                            .lift(new CausalMessageReader())
+                            .lift(co)
+                            .subscribe(s -> System.out.println("received: " + s));
+                //identificar a mensagem
             });
+
             loop.run();
 
             /*

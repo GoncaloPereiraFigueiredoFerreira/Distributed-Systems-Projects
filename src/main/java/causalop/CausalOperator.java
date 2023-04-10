@@ -49,25 +49,38 @@ public class CausalOperator<T> implements ObservableOperator<T, CausalMessage<T>
     }
 
 
-
+    private void processCausalMessage(CausalMessage<T> m,@NonNull Observer<? super T> down){
+        messageBuffer.add(m);
+        for ( Iterator<CausalMessage<T>> it = messageBuffer.listIterator();it.hasNext();){
+            CausalMessage<T> cm = it.next();
+            if(isOutDated(cm)){
+                it.remove();
+            }
+            else if (check(cm)){
+                vv[m.j]++;
+                down.onNext(cm.payload);
+                it.remove();
+                it = messageBuffer.listIterator();
+            }
+        }
+    }
 
     @Override
-    public @NonNull Observer<? super CausalMessage<T>> apply(@NonNull Observer<? super T> down) throws Throwable {
-        return new DisposableObserver<CausalMessage<T>>() {
+    public @NonNull Observer<? super Message> apply(@NonNull Observer<? super T> down) throws Throwable {
+        return new DisposableObserver<Message>() {
             @Override
-            public void onNext(@NonNull CausalMessage<T> m) {
-                messageBuffer.add(m);
-                for ( Iterator<CausalMessage<T>> it = messageBuffer.listIterator();it.hasNext();){
-                    CausalMessage<T> cm = it.next();
-                    if(isOutDated(cm)){
-                        it.remove();
-                    }
-                    else if (check(cm)){
-                        vv[m.j]++;
-                        down.onNext(cm.payload);
-                        it.remove();
-                        it = messageBuffer.listIterator();
-                    }
+            public void onNext(@NonNull Message message) {
+                switch (message.getType()){
+                    case 0:
+                        CausalMessage<T> cm1 = (CausalMessage<T>) message;
+                        processCausalMessage(cm1,down);
+                        break;
+                    case 1:
+                        ClientMessage<T> cm2 = (ClientMessage<T>) message;
+                        down.onNext(cm2.message);
+                        break;
+                    default:
+                        down.onError(new Exception());
                 }
             }
 
