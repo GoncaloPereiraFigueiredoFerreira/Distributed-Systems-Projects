@@ -1,47 +1,65 @@
 package observableServer;
 
-import causalop.CausalMessageReader;
-import causalop.CausalOperator;
+import causalop.*;
+import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.observables.GroupedObservable;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
+import java.util.List;
 
-public class Server {
-    public static void main(String args[]) throws IOException {
+public class Server extends Thread {
+    int nServers;
+    int identifier;
+    ServerSocketChannel ss;
+    List<SocketChannel> channels;
 
-        // TODO: Parse the args to retrieve number of nodes
+    public Server(int identifier,int nServers,ServerSocketChannel ss,List<SocketChannel> channels){
+        this.nServers=nServers;
+        this.identifier=identifier;
+        this.ss=ss;
+        this.channels=channels;
+    }
 
-        int n = 5;
-        //CBCast<String> cbCast = new CBCast<>(n,0);
-        ServerSocketChannel ss= null;
+    public void run() {
         try {
-            ss = ServerSocketChannel.open();
-            ss.bind(new InetSocketAddress(12345));
             var loop = new MainLoop();
-
             var server = loop.accept(ss);
 
             // Subscribe method catches the onNext callbacks
-            CausalOperator co = new CausalOperator(n);
+            CausalOperator co = new CausalOperator(nServers);
             server.subscribe(conn -> {
-                var in = loop.read(conn)
+                @NonNull Observable<GroupedObservable<Integer, Message>> in =
+                        loop.read(conn)
                             .lift(new CausalMessageReader())
-                            .lift(co)
-                            .subscribe(s -> System.out.println("received: " + s));
-                //identificar a mensagem
-            });
+                            .groupBy(Message::getType);
 
+               in.subscribe(group -> {
+                    if (group.getKey() == 0) { //CBCast messages
+                        group.map(message -> (CausalMessage) message)
+                                .lift(co)
+                                .subscribe(s -> System.out.println("received: " + s));
+                    } else if (group.getKey() == 1) { //Client messages
+                        group.map(message -> (ClientMessage) message)
+                                .map(message -> new CausalMessage<>(message.getContent(),identifier,co.getAndIncrementVV(identifier)))
+                                .subscribe(message -> {
+                                    for(SocketChannel channel:channels){
+                                        channel.write(message.toByteBuffer());
+                                    }
+                                    //conn.write(ByteBuffer.wrap()); //TODO escrever de volta ao cliente
+                                });
+                    } else {
+                        throw new IllegalArgumentException("Unsupported message type");
+                    }
+                });
+            });
             loop.run();
 
-            /*
-            var in = ... // Mensagens desordenadas
-                         // da classe CausalMessage<T>
-            in.lift(new CausalOperator<T>(n)) // Ordenação
-                    .map(payload -> process(payload)) // Processamento de mensagens
-                         // ordenadas da classe T
-                    .subscribe();
-            */
         } catch (IOException e) {
             e.printStackTrace();
         }

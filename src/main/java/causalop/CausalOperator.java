@@ -65,26 +65,30 @@ public class CausalOperator<T> implements ObservableOperator<T, CausalMessage<T>
         }
     }
 
+    public int[] getAndIncrementVV(int id){
+        vv[id]++;
+        return vv;
+    }
+
     @Override
-    public @NonNull Observer<? super Message> apply(@NonNull Observer<? super T> down) throws Throwable {
-        return new DisposableObserver<Message>() {
+    public @NonNull Observer<? super CausalMessage<T>> apply(@NonNull Observer<? super T> down) throws Throwable {
+        return new DisposableObserver<CausalMessage<T>>() {
             @Override
-            public void onNext(@NonNull Message message) {
-                switch (message.getType()){
-                    case 0:
-                        CausalMessage<T> cm1 = (CausalMessage<T>) message;
-                        processCausalMessage(cm1,down);
-                        break;
-                    case 1:
-                        ClientMessage<T> cm2 = (ClientMessage<T>) message;
-                        down.onNext(cm2.message);
-                        break;
-                    default:
-                        down.onError(new Exception());
+            public void onNext(@NonNull CausalMessage<T> message) {
+                messageBuffer.add(message);
+                for ( Iterator<CausalMessage<T>> it = messageBuffer.listIterator();it.hasNext();){
+                    CausalMessage<T> cm = it.next();
+                    if(isOutDated(cm)){
+                        it.remove();
+                    }
+                    else if (check(cm)){
+                        vv[message.j]++;
+                        down.onNext(cm.payload);
+                        it.remove();
+                        it = messageBuffer.listIterator();
+                    }
                 }
             }
-
-
 
             @Override
             public void onError(@NonNull Throwable e) {
