@@ -8,18 +8,22 @@ import io.reactivex.rxjava3.observers.DisposableObserver;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class CausalOperator<T> implements ObservableOperator<T, CausalMessage<T>> {
     private final int n;
     private int vv[];
     private List<CausalMessage<T>> messageBuffer;
+    private Logger logger;
 
-    public CausalOperator(int n) {
+    public CausalOperator(int n, Logger logger) {
         this.n = n;
         this.vv = new int[n];
         for (int i =0; i<n;i++) this.vv[i]=0; // Just to be sure it starts the array with 0s
         this.messageBuffer = new ArrayList<>();
+        this.logger=logger;
     }
 
 
