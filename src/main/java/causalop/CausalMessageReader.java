@@ -20,10 +20,11 @@ public class CausalMessageReader implements ObservableOperator<Message, ByteBuff
             @Override
             public void onNext(@NonNull ByteBuffer b) {
                 try {
-                    Message m = CausalMessage.fromByteBuffer(b);
+                    Message m = CausalMessage.fromByteBuffer(b.duplicate());
                     observer.onNext(m);
                 }catch (Exception e){
-                    observer.onNext(new ClientMessage(new String(b.array(), StandardCharsets.UTF_8)));
+                    var s = StandardCharsets.UTF_8.decode(b.duplicate());
+                    observer.onNext(new ClientMessage(s));
                 }
             }
 

@@ -66,19 +66,15 @@ public class Server extends Thread {
                         group.map(message -> (CausalMessage) message)
                                 .lift(co)
                                 .subscribe(s -> {
-                                    logger.log(Level.INFO,identifier+"received causal msg: " + s);
+                                    logger.log(Level.INFO,"Server "+ identifier+" received causal msg: " + s);
                                 });
                     } else if (group.getKey() == 1) { //Client messages
                         group.map(message -> (ClientMessage) message)
                                 .map(message -> new CausalMessage<>(message.getContent(),identifier,co.getAndIncrementVV(identifier)))
                                 .subscribe(message -> {
-                                    logger.log(Level.INFO,identifier+"received client msg: " + message.payload);
-                                    for(int j=0;j<nServers;j++){
-                                        SocketChannel channel = SocketChannel.open();
-                                        channel.connect(new InetSocketAddress("localhost", 12340+j));
-                                        ByteBuffer buffer = message.toByteBuffer();
-                                        channel.write(buffer);
-                                        channel.close();
+                                    logger.log(Level.INFO,"Server "+ identifier+" received client msg: " + message.payload);
+                                    for(SocketChannel channel:channels){
+                                        channel.write(message.toByteBuffer());
                                     }
                                     //conn.write(ByteBuffer.wrap()); //TODO escrever de volta ao cliente
                                 });

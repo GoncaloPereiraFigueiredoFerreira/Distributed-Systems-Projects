@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 public class ServerStarter {
     public static void main(String[] args) throws IOException {
-        int nServers = 2;
+        int nServers = 5;
         Logger logs = Logger.getLogger(ServerStarter.class.getName());
 
         Map<Integer,ServerSocketChannel> serverSockets = new HashMap<>();
