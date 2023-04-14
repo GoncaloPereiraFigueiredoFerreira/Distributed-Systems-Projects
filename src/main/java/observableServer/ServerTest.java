@@ -11,10 +11,10 @@ public class ServerTest {
     public static void main(String args[]) throws IOException {
         try{
             SocketChannel channel = SocketChannel.open();
-            channel.connect(new InetSocketAddress("localhost", 12345));
+            channel.connect(new InetSocketAddress("localhost", 12340));
 
             // Send a message to the server
-            CausalMessage<String> message = new CausalMessage<>("a", 1, 0, 1,0,0,0);
+            CausalMessage<String> message = new CausalMessage<>("a", 1, 0, 1);
             ByteBuffer buffer = message.toByteBuffer();
             channel.write(buffer);
             buffer.clear();

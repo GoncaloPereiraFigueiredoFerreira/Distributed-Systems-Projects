@@ -16,7 +16,7 @@ public class MainLoop {
     Selector sel;
     public MainLoop() throws IOException {
         // Asks the SO for a Selector
-        this.sel= SelectorProvider.provider().openSelector();
+        this.sel = SelectorProvider.provider().openSelector();
     }
 
     //Returns an observable socket channel when you accept a new socket
@@ -57,18 +57,18 @@ public class MainLoop {
                     var s = (SocketChannel)key.channel();
                     var bb = ByteBuffer.allocate(1000);
                     while(true) {
-                        if (s.read(bb) <= 0) {
+                        bb.clear();
+                        int readNumbers = s.read(bb);
+                        if (readNumbers <= 0) {
                             break;
                         }
                         bb.flip();
-                        sub.onNext(bb);
-                        bb.clear();
+                        sub.onNext(bb.duplicate());
                     }
                     key.attach(sub);
                 }
                 i.remove();
             }
-
         }
     }
 }
