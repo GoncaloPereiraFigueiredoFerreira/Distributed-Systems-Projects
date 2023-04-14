@@ -5,19 +5,19 @@ import io.reactivex.rxjava3.core.ObservableOperator;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.observers.DisposableObserver;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 
 public class CausalOperator<T> implements ObservableOperator<T, CausalMessage<T>> {
     private final int n;
     private int vv[];
+    private int sum;
     private List<CausalMessage<T>> messageBuffer;
 
     public CausalOperator(int n) {
         this.n = n;
         this.vv = new int[n];
+        this.sum = 0;
         for (int i =0; i<n;i++) this.vv[i]=0; // Just to be sure it starts the array with 0s
         this.messageBuffer = new ArrayList<>();
     }
@@ -66,6 +66,7 @@ public class CausalOperator<T> implements ObservableOperator<T, CausalMessage<T>
     }
 
     public int[] getAndIncrementVV(int id){
+        sum++;
         vv[id]++;
         return vv;
     }
@@ -75,18 +76,26 @@ public class CausalOperator<T> implements ObservableOperator<T, CausalMessage<T>
         return new DisposableObserver<CausalMessage<T>>() {
             @Override
             public void onNext(@NonNull CausalMessage<T> message) {
-                messageBuffer.add(message);
-                for ( Iterator<CausalMessage<T>> it = messageBuffer.listIterator();it.hasNext();){
-                    CausalMessage<T> cm = it.next();
-                    if(isOutDated(cm)){
-                        it.remove();
+                if(check(message)) {
+                    sum++;
+                    vv[message.j]++;
+                    down.onNext(message.payload);
+                    for (Iterator<CausalMessage<T>> it = messageBuffer.listIterator(); it.hasNext() && message.sumClock() - sum <= 1 ; ) {
+                        CausalMessage<T> cm = it.next();
+                        if (isOutDated(cm)) {
+                            it.remove();
+                        } else if (check(cm)) {
+                            sum++;
+                            vv[message.j]++;
+                            down.onNext(cm.payload);
+                            it.remove();
+                            it = messageBuffer.listIterator();
+                        }
                     }
-                    else if (check(cm)){
-                        vv[message.j]++;
-                        down.onNext(cm.payload);
-                        it.remove();
-                        it = messageBuffer.listIterator();
-                    }
+                }
+                else{
+                    messageBuffer.add(message);
+                    Collections.sort(messageBuffer);//TODO melhorar inserçao
                 }
             }
 

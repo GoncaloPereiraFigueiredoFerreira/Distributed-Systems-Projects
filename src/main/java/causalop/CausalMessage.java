@@ -2,7 +2,7 @@ package causalop;
 
 import java.nio.ByteBuffer;
 
-public class CausalMessage<T> implements Message {
+public class CausalMessage<T> implements Message, Comparable<CausalMessage<T>> {
     int j;
     int[] vv;
     public T payload;
@@ -54,5 +54,19 @@ public class CausalMessage<T> implements Message {
     @Override
     public int getType() {
         return 0;
+    }
+
+    public int sumClock(){
+        int sum = 0;
+        for (int i:vv){
+            sum = sum + i;
+        }
+        return sum;
+    }
+
+
+    @Override
+    public int compareTo(CausalMessage<T> o) {
+        return this.sumClock() - o.sumClock();
     }
 }
