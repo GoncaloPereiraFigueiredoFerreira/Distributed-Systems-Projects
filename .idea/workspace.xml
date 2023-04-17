@@ -5,9 +5,29 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4e3c4274-3557-4d0e-9b0b-f1d20247fc36" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/observableServer/MainLoop.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/observableServer/Server.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/causalop/CausalOpTestO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CBCast.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CBCastImproved.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalMessageReader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalMessageReader.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/Message.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/Message.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/observableServer/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/observableServer/Server.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/observableServer/ServerStarter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/observableServer/ServerStarter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/observableServer/ServerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/observableServer/ServerTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/causalop/CausalOpTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalMessage.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalMessage.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperator$1.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperator.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/observableServer/MainLoop.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/observableServer/MainLoop.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/observableServer/Server.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/observableServer/Server.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/test-classes/causalop/CausalOpTest.class" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -29,24 +49,20 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">
-    <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="Downloaded.Files.Path.Enabled" value="false" />
-    <property name="Repository.Attach.Annotations" value="false" />
-    <property name="Repository.Attach.JavaDocs" value="false" />
-    <property name="Repository.Attach.Sources" value="false" />
-    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="project.structure.last.edited" value="Modules" />
-    <property name="project.structure.proportion" value="0.15" />
-    <property name="project.structure.side.proportion" value="0.2" />
-    <property name="settings.editor.selected.configurable" value="build.tools" />
-  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0"
+  }
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
     </key>
     <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="causalop" />
       <recent name="causalop_flw" />
     </key>
   </component>
@@ -55,8 +71,34 @@
       <command value="mvn " />
     </option>
   </component>
-  <component name="RunManager" selected="JUnit.CausalOpTest.testGap">
-    <configuration name="CausalOpTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="JUnit.CausalOpTestF.sdgeImprv1">
+    <configuration name="ServerStarter" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="observableServer.ServerStarter" />
+      <module name="causalop" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="observableServer.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ServerTest" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="observableServer.ServerTest" />
+      <module name="causalop" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="observableServer.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="CausalOpTestF" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="causalop" />
       <extension name="coverage">
         <pattern>
@@ -65,13 +107,13 @@
         </pattern>
       </extension>
       <option name="PACKAGE_NAME" value="causalop" />
-      <option name="MAIN_CLASS_NAME" value="causalop.CausalOpTest" />
+      <option name="MAIN_CLASS_NAME" value="causalop.CausalOpTestF" />
       <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="CausalOpTest.potato" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="CausalOpTestF.sdgeImprv1" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="causalop" />
       <extension name="coverage">
         <pattern>
@@ -80,14 +122,14 @@
         </pattern>
       </extension>
       <option name="PACKAGE_NAME" value="causalop" />
-      <option name="MAIN_CLASS_NAME" value="causalop.CausalOpTest" />
-      <option name="METHOD_NAME" value="potato" />
+      <option name="MAIN_CLASS_NAME" value="causalop.CausalOpTestF" />
+      <option name="METHOD_NAME" value="sdgeImprv1" />
       <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="CausalOpTest.testGap" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="CausalOpTestO" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="causalop" />
       <extension name="coverage">
         <pattern>
@@ -96,52 +138,19 @@
         </pattern>
       </extension>
       <option name="PACKAGE_NAME" value="causalop" />
-      <option name="MAIN_CLASS_NAME" value="causalop.CausalOpTest" />
-      <option name="METHOD_NAME" value="testGap" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="CausalOpTest.testOk" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="causalop" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="causalop.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="causalop" />
-      <option name="MAIN_CLASS_NAME" value="causalop.CausalOpTest" />
-      <option name="METHOD_NAME" value="testOk" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="CausalOpTest.testReorder" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="causalop" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="causalop.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="causalop" />
-      <option name="MAIN_CLASS_NAME" value="causalop.CausalOpTest" />
-      <option name="METHOD_NAME" value="testReorder" />
-      <option name="TEST_OBJECT" value="method" />
+      <option name="MAIN_CLASS_NAME" value="causalop.CausalOpTestO" />
+      <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="JUnit.CausalOpTest.testGap" />
-        <item itemvalue="JUnit.CausalOpTest.testReorder" />
-        <item itemvalue="JUnit.CausalOpTest.potato" />
-        <item itemvalue="JUnit.CausalOpTest" />
-        <item itemvalue="JUnit.CausalOpTest.testOk" />
+        <item itemvalue="JUnit.CausalOpTestF.sdgeImprv1" />
+        <item itemvalue="JUnit.CausalOpTestF" />
+        <item itemvalue="JUnit.CausalOpTestO" />
+        <item itemvalue="Application.ServerStarter" />
+        <item itemvalue="Application.ServerTest" />
       </list>
     </recent_temporary>
   </component>
@@ -166,6 +175,31 @@
         </entry>
       </map>
     </option>
-    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/test/java/causalop/CausalOpTestO.java</url>
+          <line>31</line>
+          <option name="timeStamp" value="68" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/test/java/causalop/CausalOpTestF.java</url>
+          <line>39</line>
+          <option name="timeStamp" value="69" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java</url>
+          <line>89</line>
+          <option name="timeStamp" value="75" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java</url>
+          <line>35</line>
+          <option name="timeStamp" value="76" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

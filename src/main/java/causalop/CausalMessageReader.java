@@ -24,7 +24,7 @@ public class CausalMessageReader implements ObservableOperator<Message, ByteBuff
                     observer.onNext(m);
                 }catch (Exception e){
                     var s = StandardCharsets.UTF_8.decode(b.duplicate());
-                    observer.onNext(new ClientMessage(s));
+                    observer.onNext(new ClientMessage<>(s));
                 }
             }
 

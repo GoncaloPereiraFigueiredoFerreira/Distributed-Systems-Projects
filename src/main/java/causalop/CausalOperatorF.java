@@ -16,35 +16,40 @@ import java.util.concurrent.Flow;
 
 public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>> {
     private final int n;
-    private int vv[];
+    private VersionVector vv;
     private List<CausalMessage<T>> messageBuffer;
 
     public CausalOperatorF(int n) {
         this.n = n;
-        this.vv = new int[n];
-        for (int i =0; i<n;i++) this.vv[i]=0; // Just to be sure it starts the array with 0s
+        this.vv = new VersionVector(n);
+        this.messageBuffer = new ArrayList<>();
+    }
+
+    public CausalOperatorF(int n,VersionVector vv) {
+        this.n = n;
+        this.vv = vv.Clone();
         this.messageBuffer = new ArrayList<>();
     }
 
 
     private boolean isOutDated(CausalMessage<T> m){
-        int[] clock = m.vv;
+        VersionVector clock = m.vv;
         boolean flag = false;
-        if (vv[m.j] + 1 > clock[m.j]){
+        if (vv.getVersion(m.j) + 1 > clock.getVersion(m.j)){
             flag = true;
         }
         return flag;
     }
     private boolean check(CausalMessage<T> m){
-        int[] clock = m.vv;
+        VersionVector clock = m.vv;
 
         boolean flag = true;
-        if (vv[m.j] + 1 != clock[m.j]){
+        if (vv.getVersion(m.j) + 1 != clock.getVersion(m.j)){
             flag = false;
         }
         else{
             for(int i=0; i<n; i++) {
-                if (i != m.j && clock[i] >vv[i]){
+                if (i != m.j && clock.getVersion(i) >vv.getVersion(i)){
                     flag = false;
                 }
             }
@@ -53,7 +58,9 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
     }
 
 
-
+    public VersionVector cbCast(int id){
+        return vv.cbcast(id);
+    }
 
     @Override
     public @NonNull Subscriber<? super CausalMessage<T>> apply(@NonNull Subscriber<? super T> down) throws Throwable {
@@ -87,7 +94,7 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
                         it.remove();
                     }
                     else if (check(cm)){
-                        vv[m.j]++;
+                        vv.increaseVersion(m.j);
                         down.onNext(cm.payload);
                         it.remove();
                         it = messageBuffer.listIterator();

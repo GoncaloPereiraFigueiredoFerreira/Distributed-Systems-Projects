@@ -9,46 +9,44 @@ import java.util.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
 
-public class CausalOperator<T> implements ObservableOperator<T, CausalMessage<T>> {
+public class CausalOperatorO<T> implements ObservableOperator<T, CausalMessage<T>> {
     private final int n;
-    private int vv[];
+    private VersionVector vv;
     private int sum;
     private List<CausalMessage<T>> messageBuffer;
     private Logger logger;
 
-    public CausalOperator(int n, Logger logger) {
+    public CausalOperatorO(int n, Logger logger) {
         this.n = n;
-        this.vv = new int[n];
+        this.vv = new VersionVector(n);
         this.sum = 0;
-        for (int i =0; i<n;i++) this.vv[i]=0; // Just to be sure it starts the array with 0s
         this.messageBuffer = new ArrayList<>();
         this.logger=logger;
     }
 
 
     private boolean isOutDated(CausalMessage<T> m){
-        int[] clock = m.vv;
+        VersionVector clock = m.vv;
         boolean flag = false;
-        if (vv[m.j] + 1 > clock[m.j]){
+        if (vv.getVersion(m.j) + 1 > clock.getVersion(m.j)){
             flag = true;
         }
         return flag;
     }
     private boolean check(CausalMessage<T> m){
-        int[] clock = m.vv;
+        VersionVector clock = m.vv;
 
         boolean flag = true;
-        if (vv[m.j] + 1 != clock[m.j]){
+        if (vv.getVersion(m.j) + 1 != clock.getVersion(m.j)){
             flag = false;
         }
         else{
             for(int i=0; i<n; i++) {
-                if (i != m.j && clock[i] >vv[i]){
+                if (i != m.j && clock.getVersion(i) >vv.getVersion(i)){
                     flag = false;
                 }
             }
@@ -65,7 +63,7 @@ public class CausalOperator<T> implements ObservableOperator<T, CausalMessage<T>
                 it.remove();
             }
             else if (check(cm)){
-                vv[m.j]++;
+                vv.increaseVersion(m.j);
                 down.onNext(cm.payload);
                 it.remove();
                 it = messageBuffer.listIterator();
@@ -73,10 +71,8 @@ public class CausalOperator<T> implements ObservableOperator<T, CausalMessage<T>
         }
     }
 
-    public int[] getAndIncrementVV(int id){
-        sum++;
-        vv[id]++;
-        return vv;
+    public VersionVector cbCast(int id){
+        return vv.cbcast(id);
     }
 
     @Override
@@ -86,7 +82,7 @@ public class CausalOperator<T> implements ObservableOperator<T, CausalMessage<T>
             public void onNext(@NonNull CausalMessage<T> message) {
                 if(check(message)) {
                     sum++;
-                    vv[message.j]++;
+                    vv.increaseVersion(message.j);
                     down.onNext(message.payload);
                     for (Iterator<CausalMessage<T>> it = messageBuffer.listIterator(); it.hasNext() && message.sumClock() - sum <= 1 ; ) {
                         CausalMessage<T> cm = it.next();
@@ -94,7 +90,7 @@ public class CausalOperator<T> implements ObservableOperator<T, CausalMessage<T>
                             it.remove();
                         } else if (check(cm)) {
                             sum++;
-                            vv[message.j]++;
+                            vv.increaseVersion(message.j);
                             down.onNext(cm.payload);
                             it.remove();
                             it = messageBuffer.listIterator();
