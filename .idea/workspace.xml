@@ -5,29 +5,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4e3c4274-3557-4d0e-9b0b-f1d20247fc36" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/test/java/causalop/CausalOpTestO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CBCast.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CBCastImproved.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalMessage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalMessageReader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalMessageReader.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalOperator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorO.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/Message.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/Message.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/observableServer/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/observableServer/Server.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/observableServer/ServerStarter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/observableServer/ServerStarter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorO.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/observableServer/ServerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/observableServer/ServerTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/causalop/CausalOpTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/causalop/CausalOpTestF.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/causalop/CausalOpTestF.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/causalop/CausalOpTestO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/causalop/CausalOpTestO.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalMessage.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalMessage.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperator$1.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperator.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1$1.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/observableServer/MainLoop.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/observableServer/MainLoop.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorO$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorO$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorO.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorO.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/observableServer/Server.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/observableServer/Server.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-classes/causalop/CausalOpTest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/observableServer/ServerTest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/observableServer/ServerTest.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/test-classes/causalop/CausalOpTestF.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/causalop/CausalOpTestF.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/test-classes/causalop/CausalOpTestO.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/causalop/CausalOpTestO.class" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,14 +43,14 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.0"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -148,8 +142,8 @@
       <list>
         <item itemvalue="JUnit.CausalOpTestF.sdgeImprv1" />
         <item itemvalue="JUnit.CausalOpTestF" />
-        <item itemvalue="JUnit.CausalOpTestO" />
         <item itemvalue="Application.ServerStarter" />
+        <item itemvalue="JUnit.CausalOpTestO" />
         <item itemvalue="Application.ServerTest" />
       </list>
     </recent_temporary>
@@ -186,19 +180,18 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/test/java/causalop/CausalOpTestF.java</url>
-          <line>39</line>
+          <line>80</line>
+          <option name="timeStamp" value="70" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java</url>
+          <line>61</line>
+          <option name="timeStamp" value="71" />
+        </line-breakpoint>
+        <breakpoint enabled="true" type="java-exception">
+          <properties class="java.lang.NullPointerException" package="java.lang" />
           <option name="timeStamp" value="69" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java</url>
-          <line>89</line>
-          <option name="timeStamp" value="75" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java</url>
-          <line>35</line>
-          <option name="timeStamp" value="76" />
-        </line-breakpoint>
+        </breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>

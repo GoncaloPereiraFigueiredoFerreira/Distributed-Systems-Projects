@@ -8,15 +8,15 @@ import org.junit.Test;
 import java.util.logging.Logger;
 
 public class CausalOpTestO {
-    VersionVector vv1; // 0,1
-    VersionVector vv2; // 1,0
-    VersionVector vv3; // 1,2
+    VersionVector2 vv1; // 0,1
+    VersionVector2 vv2; // 1,0
+    VersionVector2 vv3; // 1,2
     Logger logs = Logger.getLogger(ServerStarter.class.getName());
 
     public void setup(){
-        vv1 = new VersionVector(new int[]{0, 1});
-        vv2 = new VersionVector(new int[]{1, 0});
-        vv3 = new VersionVector(new int[]{1, 2});
+        vv1 = new VersionVector2(new int[]{0, 1});
+        vv2 = new VersionVector2(new int[]{1, 0});
+        vv3 = new VersionVector2(new int[]{1, 2});
     }
 
 

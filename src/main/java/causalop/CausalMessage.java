@@ -4,13 +4,13 @@ import java.nio.ByteBuffer;
 
 public class CausalMessage<T> implements Message, Comparable<CausalMessage<T>> {
     int j;
-    VersionVector vv;
+    VersionVector2 vv;
     public T payload;
 
-    public CausalMessage(T payload, int j, VersionVector v) {
+    public CausalMessage(T payload, int j, VersionVector2 v) {
         this.payload = payload;
         this.j = j;
-        this.vv = v.Clone();
+        this.vv = v;
     }
 
     public ByteBuffer toByteBuffer() {
@@ -42,7 +42,7 @@ public class CausalMessage<T> implements Message, Comparable<CausalMessage<T>> {
 
         int j = buffer.getInt();
 
-        VersionVector vv = new VersionVector();
+        VersionVector2 vv = new VersionVector2();
         vv.fromByteBuffer(buffer);
 
         byte[] payloadBytes = new byte[buffer.remaining()];

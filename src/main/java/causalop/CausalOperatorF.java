@@ -2,38 +2,39 @@ package causalop;
 
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.FlowableOperator;
-import io.reactivex.rxjava3.core.ObservableOperator;
-import io.reactivex.rxjava3.core.Observer;
-import io.reactivex.rxjava3.observers.DisposableObserver;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.Flow;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>> {
     private final int n;
-    private VersionVector vv;
+    private VersionVector2 vv;
+    private List<Integer> lastDeliveredKeys;
+    private Map<Integer,Integer> dependencies;
     private List<CausalMessage<T>> messageBuffer;
 
     public CausalOperatorF(int n) {
         this.n = n;
-        this.vv = new VersionVector(n);
+        this.vv = new VersionVector2(n);
         this.messageBuffer = new ArrayList<>();
+        this.lastDeliveredKeys = new ArrayList<>();
+        this.dependencies = new HashMap<>();
     }
 
-    public CausalOperatorF(int n,VersionVector vv) {
+    public CausalOperatorF(int n,VersionVector2 vv) {
         this.n = n;
         this.vv = vv.Clone();
         this.messageBuffer = new ArrayList<>();
+        this.lastDeliveredKeys = new ArrayList<>();
+        this.dependencies = new HashMap<>();
     }
 
 
     private boolean isOutDated(CausalMessage<T> m){
-        VersionVector clock = m.vv;
+        VersionVector2 clock = m.vv;
         boolean flag = false;
         if (vv.getVersion(m.j) + 1 > clock.getVersion(m.j)){
             flag = true;
@@ -41,15 +42,15 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
         return flag;
     }
     private boolean check(CausalMessage<T> m){
-        VersionVector clock = m.vv;
+        VersionVector2 clock = m.vv;
 
         boolean flag = true;
         if (vv.getVersion(m.j) + 1 != clock.getVersion(m.j)){
             flag = false;
         }
         else{
-            for(int i=0; i<n; i++) {
-                if (i != m.j && clock.getVersion(i) >vv.getVersion(i)){
+            for (Integer key: clock.getKeys()){
+                if (key != m.j && clock.getVersion(key) >vv.getVersion(key)){
                     flag = false;
                 }
             }
@@ -57,9 +58,28 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
         return flag;
     }
 
+    private void evaluateDependencies(CausalMessage<T> m){
+        Map<Integer,Integer> messageDependencies = m.vv.getVV();
+        if (messageDependencies.size()>1){
+            messageDependencies.remove(m.j);
+        }
+        boolean sameDependencies = true;
+        for(Map.Entry<Integer,Integer> entry :this.dependencies.entrySet()){
+            if(!Objects.equals(messageDependencies.get(entry.getKey()), entry.getValue())){
+                sameDependencies = false;
+                break;
+            }
+        }
+        if (!sameDependencies) {
+            this.lastDeliveredKeys.clear();
+            this.dependencies = messageDependencies;
+        }
+        this.lastDeliveredKeys.add(m.j);
+    }
 
-    public VersionVector cbCast(int id){
-        return vv.cbcast(id);
+
+    public VersionVector2 cbCast(int id){
+        return vv.cbcast(id,this.lastDeliveredKeys);
     }
 
     @Override
@@ -95,6 +115,7 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
                     }
                     else if (check(cm)){
                         vv.increaseVersion(m.j);
+                        evaluateDependencies(m);
                         down.onNext(cm.payload);
                         it.remove();
                         it = messageBuffer.listIterator();

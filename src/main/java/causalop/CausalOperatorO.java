@@ -15,22 +15,26 @@ import java.util.logging.Logger;
 
 public class CausalOperatorO<T> implements ObservableOperator<T, CausalMessage<T>> {
     private final int n;
-    private VersionVector vv;
+    private VersionVector2 vv;
+    private List<Integer> lastDeliveredKeys;
+    private Map<Integer,Integer> dependencies;
     private int sum;
     private List<CausalMessage<T>> messageBuffer;
     private Logger logger;
 
     public CausalOperatorO(int n, Logger logger) {
         this.n = n;
-        this.vv = new VersionVector(n);
+        this.vv = new VersionVector2(n);
         this.sum = 0;
         this.messageBuffer = new ArrayList<>();
         this.logger=logger;
+        this.lastDeliveredKeys = new ArrayList<>();
+        this.dependencies = new HashMap<>();
     }
 
 
     private boolean isOutDated(CausalMessage<T> m){
-        VersionVector clock = m.vv;
+        VersionVector2 clock = m.vv;
         boolean flag = false;
         if (vv.getVersion(m.j) + 1 > clock.getVersion(m.j)){
             flag = true;
@@ -38,7 +42,7 @@ public class CausalOperatorO<T> implements ObservableOperator<T, CausalMessage<T
         return flag;
     }
     private boolean check(CausalMessage<T> m){
-        VersionVector clock = m.vv;
+        VersionVector2 clock = m.vv;
 
         boolean flag = true;
         if (vv.getVersion(m.j) + 1 != clock.getVersion(m.j)){
@@ -54,27 +58,28 @@ public class CausalOperatorO<T> implements ObservableOperator<T, CausalMessage<T
         return flag;
     }
 
+    public VersionVector2 cbCast(int id){
+        return vv.cbcast(id,this.lastDeliveredKeys);
+    }
 
-    private void processCausalMessage(CausalMessage<T> m,@NonNull Observer<? super T> down){
-        messageBuffer.add(m);
-        for ( Iterator<CausalMessage<T>> it = messageBuffer.listIterator();it.hasNext();){
-            CausalMessage<T> cm = it.next();
-            if(isOutDated(cm)){
-                it.remove();
-            }
-            else if (check(cm)){
-                vv.increaseVersion(m.j);
-                down.onNext(cm.payload);
-                it.remove();
-                it = messageBuffer.listIterator();
+    private void evaluateDependencies(CausalMessage<T> m){
+        Map<Integer,Integer> messageDependencies = m.vv.getVV();
+        if (messageDependencies.size()>1){
+            messageDependencies.remove(m.j);
+        }
+        boolean sameDependencies = true;
+        for(Map.Entry<Integer,Integer> entry :this.dependencies.entrySet()){
+            if(!Objects.equals(messageDependencies.get(entry.getKey()), entry.getValue())){
+                sameDependencies = false;
+                break;
             }
         }
+        if (!sameDependencies) {
+            this.lastDeliveredKeys.clear();
+            this.dependencies = messageDependencies;
+        }
+        this.lastDeliveredKeys.add(m.j);
     }
-
-    public VersionVector cbCast(int id){
-        return vv.cbcast(id);
-    }
-
     @Override
     public @NonNull Observer<? super CausalMessage<T>> apply(@NonNull Observer<? super T> down) throws Throwable {
         return new DisposableObserver<CausalMessage<T>>() {
@@ -90,7 +95,7 @@ public class CausalOperatorO<T> implements ObservableOperator<T, CausalMessage<T
                             it.remove();
                         } else if (check(cm)) {
                             sum++;
-                            vv.increaseVersion(message.j);
+                            evaluateDependencies(message);
                             down.onNext(cm.payload);
                             it.remove();
                             it = messageBuffer.listIterator();
