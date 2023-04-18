@@ -7,8 +7,8 @@
     <list default="true" id="4e3c4274-3557-4d0e-9b0b-f1d20247fc36" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorO.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/causalop/VersionVector2.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/VersionVector2.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/causalop/CausalOpTestF.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/causalop/CausalOpTestF.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,7 +84,7 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="CausalOpTestF.testDupl" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="CausalOpTestF.testReorder" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="causalop" />
       <extension name="coverage">
         <pattern>
@@ -94,7 +94,7 @@
       </extension>
       <option name="PACKAGE_NAME" value="causalop" />
       <option name="MAIN_CLASS_NAME" value="causalop.CausalOpTestF" />
-      <option name="METHOD_NAME" value="testDupl" />
+      <option name="METHOD_NAME" value="testReorder" />
       <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -133,10 +133,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="JUnit.SdgeImprovements" />
-        <item itemvalue="JUnit.CausalOpTestO" />
         <item itemvalue="JUnit.CausalOpTestF" />
+        <item itemvalue="JUnit.CausalOpTestF.testReorder" />
+        <item itemvalue="JUnit.CausalOpTestO" />
         <item itemvalue="JUnit.CausalOpTestF.SdgeVectorIprovements" />
-        <item itemvalue="JUnit.CausalOpTestF.testDupl" />
       </list>
     </recent_temporary>
   </component>
@@ -172,13 +172,13 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java</url>
-          <line>38</line>
-          <option name="timeStamp" value="79" />
+          <line>47</line>
+          <option name="timeStamp" value="84" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java</url>
-          <line>108</line>
-          <option name="timeStamp" value="81" />
+          <line>121</line>
+          <option name="timeStamp" value="86" />
         </line-breakpoint>
         <breakpoint enabled="true" type="java-exception">
           <properties class="java.lang.NullPointerException" package="java.lang" />

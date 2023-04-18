@@ -95,7 +95,7 @@ public class CausalOperatorO<T> implements ObservableOperator<T, CausalMessage<T
                             it.remove();
                         } else if (check(cm)) {
                             sum++;
-                            evaluateDependencies(message);
+                            evaluateDependencies(cm);
                             down.onNext(cm.payload);
                             it.remove();
                             it = messageBuffer.listIterator();

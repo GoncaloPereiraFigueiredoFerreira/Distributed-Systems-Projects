@@ -37,6 +37,10 @@ public class VersionVector2 {
         return vv.keySet();
     }
 
+    public void  addMissingNodes(VersionVector2 vv2){
+        vv2.getVV().forEach(this.vv::putIfAbsent);
+    }
+
     public int getVersion(int nodo){
         return vv.get(nodo);
     }

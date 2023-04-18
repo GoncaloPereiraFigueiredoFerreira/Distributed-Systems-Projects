@@ -14,11 +14,13 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
     private VersionVector2 vv;
     private List<Integer> lastDeliveredKeys;
     private Map<Integer,Integer> dependencies;
+    private int sum;
     private List<CausalMessage<T>> messageBuffer;
 
     public CausalOperatorF(int n) {
         this.n = n;
         this.vv = new VersionVector2(n);
+        this.sum=0;
         this.messageBuffer = new ArrayList<>();
         this.lastDeliveredKeys = new ArrayList<>();
         this.dependencies = new HashMap<>();
@@ -27,6 +29,7 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
     public CausalOperatorF(int n,VersionVector2 vv) {
         this.n = n;
         this.vv = vv.Clone();
+        this.sum=0;
         this.messageBuffer = new ArrayList<>();
         this.lastDeliveredKeys = new ArrayList<>();
         this.dependencies = new HashMap<>();
@@ -101,21 +104,31 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
                 });
             }
 
+            public void deliver(@NonNull CausalMessage<T> message){
+                sum++;
+                vv.increaseVersion(message.j);
+                evaluateDependencies(message);
+                down.onNext(message.payload);
+            }
             @Override
-            public void onNext(@NonNull CausalMessage<T> m) {
-                messageBuffer.add(m);
-                for ( Iterator<CausalMessage<T>> it = messageBuffer.listIterator();it.hasNext();){
-                    CausalMessage<T> cm = it.next();
-                    if(isOutDated(cm)){
-                        it.remove();
+            public void onNext(@NonNull CausalMessage<T> message) {
+                if(check(message)) {
+                    deliver(message);
+                    for (Iterator<CausalMessage<T>> it = messageBuffer.listIterator(); it.hasNext() && message.sumClock() - sum <= 1 ; ) {
+                        CausalMessage<T> cm = it.next();
+                        if (isOutDated(cm)) {
+                            it.remove();
+                        } else if (check(cm)) {
+                            deliver(cm);
+                            it.remove();
+                            it = messageBuffer.listIterator();
+                        }
                     }
-                    else if (check(cm)){
-                        vv.increaseVersion(m.j);
-                        evaluateDependencies(m);
-                        down.onNext(cm.payload);
-                        it.remove();
-                        it = messageBuffer.listIterator();
-                    }
+                }
+                else{
+                    message.vv.addMissingNodes(vv);
+                    messageBuffer.add(message);
+                    Collections.sort(messageBuffer);//TODO melhorar inserçao
                 }
                 parent.request(1);
             }
