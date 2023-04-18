@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class VersionVector2 {
     private Map<Integer,Integer> vv;
@@ -83,7 +84,7 @@ public class VersionVector2 {
         }
     }
     public Map<Integer,Integer> getVV(){
-        return this.vv;
+        return this.vv.entrySet().stream().collect(Collectors.toMap(e->e.getKey(),e->e.getValue()));
     }
     public VersionVector2 Clone(){
         return new VersionVector2(this.vv);

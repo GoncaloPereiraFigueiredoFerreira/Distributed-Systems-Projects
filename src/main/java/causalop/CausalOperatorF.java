@@ -60,16 +60,9 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
 
     private void evaluateDependencies(CausalMessage<T> m){
         Map<Integer,Integer> messageDependencies = m.vv.getVV();
-        if (messageDependencies.size()>1){
-            messageDependencies.remove(m.j);
-        }
-        boolean sameDependencies = true;
-        for(Map.Entry<Integer,Integer> entry :this.dependencies.entrySet()){
-            if(!Objects.equals(messageDependencies.get(entry.getKey()), entry.getValue())){
-                sameDependencies = false;
-                break;
-            }
-        }
+        messageDependencies.remove(m.j);
+
+        boolean sameDependencies = this.dependencies.entrySet().equals(messageDependencies.entrySet());
         if (!sameDependencies) {
             this.lastDeliveredKeys.clear();
             this.dependencies = messageDependencies;
@@ -79,7 +72,10 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
 
 
     public VersionVector2 cbCast(int id){
-        return vv.cbcast(id,this.lastDeliveredKeys);
+        VersionVector2 vector = vv.cbcast(id,this.lastDeliveredKeys);
+        this.lastDeliveredKeys.clear();
+        this.dependencies.clear();
+        return vector;
     }
 
     @Override

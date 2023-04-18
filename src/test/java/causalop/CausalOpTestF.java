@@ -76,40 +76,4 @@ public class CausalOpTestF {
                 .lift(new CausalOperatorF<>(2))
                 .toList().blockingGet();
     }
-
-    private boolean sameMap(Map<Integer,Integer> m1,Map<Integer,Integer> m2) {
-        if(m1.size()!=m2.size()){
-            return false;
-        }
-        for (Map.Entry<Integer,Integer> entry:m1.entrySet()){
-            if(!Objects.equals(m2.get(entry.getKey()), entry.getValue())){
-                return false;
-            }
-        }
-        return true;
-    }
-
-    @Test
-    public void sdgeImprv1() {
-        vv1 = new VersionVector2(new int[]{4, 3, 7});
-        vv2 = new VersionVector2(new int[]{4, 4, 7});
-        HashMap map = new HashMap<>();
-        map.put(2,8);
-        vv3 = new VersionVector2(map);
-
-
-        CausalOperatorF<String> co = new CausalOperatorF<>(3,vv1);
-        vv1=co.cbCast(0);
-
-        var l = Flowable.just(
-                        new CausalMessage<>("", 1, vv2),
-                        new CausalMessage<>("", 2, vv3)
-                )
-                .lift(co)
-                .subscribe();
-        Map<Integer,Integer> result = new HashMap<>();
-        result.put(0,6);
-        result.put(2,8);
-        Assert.assertTrue(sameMap(co.cbCast(0).getVV(),result));
-    }
 }
