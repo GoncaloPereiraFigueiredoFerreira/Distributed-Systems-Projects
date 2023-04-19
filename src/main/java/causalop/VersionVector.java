@@ -59,8 +59,8 @@ public class VersionVector {
         Map<Integer,Integer> toSendVV = new HashMap<>();
         toSendVV.put(nodo,this.vv.get(nodo));
         for (Integer key:lastKeys){
-        if(key!=null && key!=nodo){
-            toSendVV.put(key,this.vv.get(key));
+            if(key!=null && key!=nodo){
+                toSendVV.put(key,this.vv.get(key));
             }
         }
         return new VersionVector(toSendVV);

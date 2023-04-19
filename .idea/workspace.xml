@@ -6,28 +6,19 @@
   <component name="ChangeListManager">
     <list default="true" id="4e3c4274-3557-4d0e-9b0b-f1d20247fc36" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalMessage.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorO.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/causalop/VersionVector.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/VersionVector.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/VersionVector2.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/observableServer/ServerTest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/causalop/CausalOpTestF.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/causalop/CausalOpTestF.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/causalop/CausalOpTestO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/causalop/CausalOpTestO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/causalop/SdgeImprovements.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalMessage.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalMessage.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/observableServer/MainLoop.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/observableServer/MainLoop.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/observableServer/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/observableServer/Server.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/observableServer/ServerStarter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/observableServer/ServerStarter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/observableServer/ServerStarterDemoniaco.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/observableServer/ServerStarterDemoniaco.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1$1.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorO$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorO$1.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorO.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorO.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/causalop/VersionVector.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/VersionVector.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/causalop/VersionVector2.class" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/observableServer/Server.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/observableServer/Server.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/observableServer/ServerTest.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-classes/causalop/CausalOpTestF.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/causalop/CausalOpTestF.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-classes/causalop/CausalOpTestO.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/causalop/CausalOpTestO.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-classes/causalop/SdgeImprovements.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/causalop/SdgeImprovements.class" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -71,7 +62,20 @@
       <command value="mvn " />
     </option>
   </component>
-  <component name="RunManager" selected="Application.ServerStarter">
+  <component name="RunManager" selected="Application.ServerStarterDemoniaco">
+    <configuration name="ServerStarter" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="observableServer.ServerStarter" />
+      <module name="causalop" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="observableServer.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="ServerStarter" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="observableServer.ServerStarter" />
       <module name="causalop" />
@@ -96,22 +100,6 @@
       <option name="PACKAGE_NAME" value="causalop" />
       <option name="MAIN_CLASS_NAME" value="causalop.CausalOpTestF" />
       <option name="TEST_OBJECT" value="class" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="CausalOpTestF.testReorder" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="causalop" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="causalop.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="causalop" />
-      <option name="MAIN_CLASS_NAME" value="causalop.CausalOpTestF" />
-      <option name="METHOD_NAME" value="testReorder" />
-      <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -148,11 +136,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.ServerStarterDemoniaco" />
         <item itemvalue="Application.ServerStarter" />
         <item itemvalue="JUnit.CausalOpTestO" />
         <item itemvalue="JUnit.CausalOpTestF" />
         <item itemvalue="JUnit.SdgeImprovements" />
-        <item itemvalue="JUnit.CausalOpTestF.testReorder" />
       </list>
     </recent_temporary>
   </component>
@@ -177,15 +165,5 @@
         </entry>
       </map>
     </option>
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <breakpoint enabled="true" type="java-exception">
-          <properties class="java.lang.NullPointerException" package="java.lang" />
-          <option name="timeStamp" value="69" />
-        </breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>

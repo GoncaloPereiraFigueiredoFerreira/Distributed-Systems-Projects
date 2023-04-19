@@ -37,11 +37,7 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
 
     private boolean isOutDated(CausalMessage<T> m){
         VersionVector clock = m.vv;
-        boolean flag = false;
-        if (vv.getVersion(m.j) + 1 > clock.getVersion(m.j)){
-            flag = true;
-        }
-        return flag;
+        return vv.getVersion(m.j) + 1 > clock.getVersion(m.j);
     }
     private boolean check(CausalMessage<T> m){
         VersionVector clock = m.vv;

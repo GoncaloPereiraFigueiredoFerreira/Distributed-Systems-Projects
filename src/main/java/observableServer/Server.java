@@ -31,12 +31,12 @@ public class Server extends Thread {
         try {
 
 
-            var loop = new MainLoop();
+            var loop = new MainLoop(channels,nServers);
             var server = loop.accept(ss);
 
             // Subscribe method catches the onNext callbacks
             CausalOperatorO co = new CausalOperatorO(nServers,logger);
-            /*
+
             for(SocketChannel channel:channels){
                 @NonNull Observable<GroupedObservable<Integer, Message>> in = loop.read(channel)
                                                                                   .lift(new CausalMessageReader())
@@ -47,7 +47,7 @@ public class Server extends Thread {
                         .subscribe(s -> logger.log(Level.INFO,"received: " + s));
                 });
             }
-*/
+
             server.subscribe(conn -> {
                 @NonNull Observable<GroupedObservable<Integer, Message>> in =
                         loop.read(conn)

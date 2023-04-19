@@ -1,8 +1,6 @@
 package causalop;
 
-import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Observable;
-import observableServer.ServerStarter;
 import org.junit.Assert;
 import org.junit.Test;
 
