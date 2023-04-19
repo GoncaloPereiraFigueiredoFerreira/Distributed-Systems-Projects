@@ -18,10 +18,12 @@ public class MainLoop {
     Selector sel;
     private List<SocketChannel> nodeChannels;
     private int nServers;
-    public MainLoop(List<SocketChannel> channels,int nServers) throws IOException {
+    private int identifier;
+    public MainLoop(List<SocketChannel> channels,int nServers, int identifier) throws IOException {
         // Asks the SO for a Selector
         this.nodeChannels = channels;
         this.nServers=nServers;
+        this.identifier=identifier;
         this.sel = SelectorProvider.provider().openSelector();
     }
 
@@ -56,8 +58,8 @@ public class MainLoop {
                     ServerSocketChannel ss = (ServerSocketChannel) key.channel();
                     SocketChannel s = ss.accept();
 
-                    InetSocketAddress localAddr = (InetSocketAddress) s.getRemoteAddress();
-                    if(localAddr.getPort()>=12340 && localAddr.getPort()<12340+nServers)
+                    InetSocketAddress localAddr = (InetSocketAddress) s.getLocalAddress();
+                    if(localAddr.getPort()!=12340+identifier && localAddr.getPort()>=12340 && localAddr.getPort()<12340+nServers)
                         nodeChannels.add(s);
 
                     var sub = (ObservableEmitter<SocketChannel>) key.attachment();

@@ -31,7 +31,7 @@ public class Server extends Thread {
         try {
 
 
-            var loop = new MainLoop(channels,nServers);
+            var loop = new MainLoop(channels,nServers,identifier);
             var server = loop.accept(ss);
 
             // Subscribe method catches the onNext callbacks
@@ -67,7 +67,7 @@ public class Server extends Thread {
                                 .map(message -> new CausalMessage<>(message.getContent(),identifier,co.cbCast(identifier)))
                                 .subscribe(message -> {
                                     logger.log(Level.INFO,"Server "+ identifier+" received client msg: " + message.payload);
-                                    for(SocketChannel channel:channels){
+                                    for(SocketChannel channel: channels){
                                         channel.write(message.toByteBuffer());
                                     }
                                     //conn.write(ByteBuffer.wrap()); //TODO escrever de volta ao cliente
