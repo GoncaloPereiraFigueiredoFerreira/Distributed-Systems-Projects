@@ -6,12 +6,11 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>> {
     private final int n;
-    private VersionVector2 vv;
+    private VersionVector vv;
     private List<Integer> lastDeliveredKeys;
     private Map<Integer,Integer> dependencies;
     private int sum;
@@ -19,14 +18,14 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
 
     public CausalOperatorF(int n) {
         this.n = n;
-        this.vv = new VersionVector2(n);
+        this.vv = new VersionVector(n);
         this.sum=0;
         this.messageBuffer = new ArrayList<>();
         this.lastDeliveredKeys = new ArrayList<>();
         this.dependencies = new HashMap<>();
     }
 
-    public CausalOperatorF(int n,VersionVector2 vv) {
+    public CausalOperatorF(int n, VersionVector vv) {
         this.n = n;
         this.vv = vv.Clone();
         this.sum=0;
@@ -37,7 +36,7 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
 
 
     private boolean isOutDated(CausalMessage<T> m){
-        VersionVector2 clock = m.vv;
+        VersionVector clock = m.vv;
         boolean flag = false;
         if (vv.getVersion(m.j) + 1 > clock.getVersion(m.j)){
             flag = true;
@@ -45,7 +44,7 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
         return flag;
     }
     private boolean check(CausalMessage<T> m){
-        VersionVector2 clock = m.vv;
+        VersionVector clock = m.vv;
 
         boolean flag = true;
         if (vv.getVersion(m.j) + 1 != clock.getVersion(m.j)){
@@ -74,8 +73,8 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
     }
 
 
-    public VersionVector2 cbCast(int id){
-        VersionVector2 vector = vv.cbcast(id,this.lastDeliveredKeys);
+    public VersionVector cbCast(int id){
+        VersionVector vector = vv.cbcast(id,this.lastDeliveredKeys);
         this.lastDeliveredKeys.clear();
         this.dependencies.clear();
         return vector;
