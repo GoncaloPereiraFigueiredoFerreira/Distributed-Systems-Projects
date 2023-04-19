@@ -4,22 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4e3c4274-3557-4d0e-9b0b-f1d20247fc36" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/VersionVector.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/VersionVector.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/observableServer/MainLoop.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/observableServer/MainLoop.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/observableServer/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/observableServer/Server.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/observableServer/ServerStarter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/observableServer/ServerStarter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/observableServer/ServerStarterDemoniaco.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/observableServer/ServerStarterDemoniaco.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorO$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorO$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorO.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorO.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/observableServer/Server.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/observableServer/Server.class" afterDir="false" />
-    </list>
+    <list default="true" id="4e3c4274-3557-4d0e-9b0b-f1d20247fc36" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -62,7 +47,7 @@
       <command value="mvn " />
     </option>
   </component>
-  <component name="RunManager" selected="Application.ServerStarterDemoniaco">
+  <component name="RunManager" selected="JUnit.CausalOpTestF">
     <configuration name="ServerStarter" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="observableServer.ServerStarter" />
       <module name="causalop" />
@@ -136,10 +121,10 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.CausalOpTestF" />
         <item itemvalue="Application.ServerStarterDemoniaco" />
         <item itemvalue="Application.ServerStarter" />
         <item itemvalue="JUnit.CausalOpTestO" />
-        <item itemvalue="JUnit.CausalOpTestF" />
         <item itemvalue="JUnit.SdgeImprovements" />
       </list>
     </recent_temporary>
@@ -165,5 +150,21 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/observableServer/Server.java</url>
+          <line>67</line>
+          <option name="timeStamp" value="86" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/observableServer/Server.java</url>
+          <line>68</line>
+          <option name="timeStamp" value="87" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
