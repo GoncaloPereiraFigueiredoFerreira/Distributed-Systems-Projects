@@ -85,17 +85,16 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
             @Override
             public void onSubscribe(Subscription subscription) {
                 parent = subscription;
+                parent.request(1);
                 down.onSubscribe(new Subscription() {
+
                     @Override
                     public void request(long l) {
-                        parent.request(1);
                         credits += l;
                     }
 
                     @Override
-                    public void cancel() {
-
-                    }
+                    public void cancel() {}
                 });
             }
 
@@ -114,9 +113,11 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
                         if (isOutDated(cm)) {
                             it.remove();
                         } else if (check(cm)) {
-                            deliver(cm);
-                            it.remove();
-                            it = messageBuffer.listIterator();
+                            if(this.credits>0) {
+                                deliver(cm);
+                                it.remove();
+                                it = messageBuffer.listIterator();
+                            } else this.onError(new Exception());
                         }
                     }
                 }
@@ -125,7 +126,9 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
                     messageBuffer.add(message);
                     Collections.sort(messageBuffer);//TODO melhorar inserçao
                 }
-                parent.request(1);
+                if(messageBuffer.size()<20){
+                    parent.request(1);
+                }
             }
 
 

@@ -6,10 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="4e3c4274-3557-4d0e-9b0b-f1d20247fc36" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/observableServer/MainLoop.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/observableServer/MainLoop.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/observableServer/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/observableServer/Server.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/observableServer/MainLoop.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/observableServer/MainLoop.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/observableServer/Server.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/observableServer/Server.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1.class" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,7 +52,7 @@
       <command value="mvn " />
     </option>
   </component>
-  <component name="RunManager" selected="Application.ServerStarter">
+  <component name="RunManager" selected="JUnit.CausalOpTestO">
     <configuration name="ServerStarter" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="observableServer.ServerStarter" />
       <module name="causalop" />
@@ -127,10 +126,10 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.ServerStarter" />
-        <item itemvalue="JUnit.CausalOpTestF" />
-        <item itemvalue="Application.ServerStarterDemoniaco" />
         <item itemvalue="JUnit.CausalOpTestO" />
+        <item itemvalue="JUnit.CausalOpTestF" />
+        <item itemvalue="Application.ServerStarter" />
+        <item itemvalue="Application.ServerStarterDemoniaco" />
         <item itemvalue="JUnit.SdgeImprovements" />
       </list>
     </recent_temporary>
