@@ -7,11 +7,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class VersionVector {
+public class VersionVector implements Cloneable{
     private Map<Integer,Integer> vv;
-
+    private int vectorSum;
     public VersionVector(){
         this.vv = new HashMap<>();
+        vectorSum = 0;
     }
 
     public VersionVector(Map<Integer, Integer> vv) {
@@ -37,8 +38,14 @@ public class VersionVector {
         return vv.keySet();
     }
 
-    public void  addMissingNodes(VersionVector vv2){
-        vv2.getVV().forEach(this.vv::putIfAbsent);
+    public void calculateVectorSum(VersionVector vv2){
+        VersionVector temp = vv2.clone();
+        temp.getVV().forEach(this.vv::putIfAbsent);
+        this.vectorSum=temp.vv.values().stream().mapToInt(e->e).sum();
+    }
+
+    public void calculateVectorSum(){
+        this.vectorSum= this.vv.values().stream().mapToInt(e->e).sum();
     }
 
     public int getVersion(int nodo){
@@ -50,8 +57,11 @@ public class VersionVector {
         this.vv.put(nodo,atual+1);
     }
 
-    public int sumClock(){
-        return vv.values().stream().mapToInt(e->e).sum();
+    public int getLastSumClock(){
+        if(this.vectorSum==0){
+            calculateVectorSum();
+        }
+        return this.vectorSum;
     }
 
     public VersionVector cbcast(int nodo, List<Integer> lastKeys){ //improvement 1 aplicado
@@ -88,9 +98,14 @@ public class VersionVector {
         }
     }
     public Map<Integer,Integer> getVV(){
-        return this.vv.entrySet().stream().collect(Collectors.toMap(e->e.getKey(),e->e.getValue()));
+        return this.vv.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
     public VersionVector Clone(){
+        return new VersionVector(this.vv);
+    }
+
+    @Override
+    public VersionVector clone() {
         return new VersionVector(this.vv);
     }
 }

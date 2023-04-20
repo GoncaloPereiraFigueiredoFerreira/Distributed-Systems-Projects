@@ -148,4 +148,28 @@ public class CausalOpTestF {
         VersionVector result = cof.cbCast(0);
         Assert.assertTrue(sameMap(expectedResult,result.getVV()));
     }
+
+    @Test
+    public void bcastTwice() {
+        setup2(); // all vv's start with 0's
+        vvk = new VersionVector(new int[]{0, 1, 0}); //k will send message after receiving from j
+        List<Integer> vvkDependencies = new ArrayList<>();
+        vvkDependencies.add(1);
+
+        CausalOperatorF cof = new CausalOperatorF<>(3);
+        var l = Flowable.just(
+                        new CausalMessage<>(null, 1, vvj.cbcast(1,new ArrayList<>())), //No dependencies
+                        new CausalMessage<>(null, 2, vvk.cbcast(2,vvkDependencies)), //Has dependencie from j
+                        new CausalMessage<>(null, 1, vvj.cbcast(1,new ArrayList<>())) //Depends on itself
+                )
+                .lift(cof)
+                .toList().blockingGet();
+
+        Map<Integer,Integer> expectedResult = new HashMap<>();
+        expectedResult.put(0,1);
+        expectedResult.put(1,2);
+        expectedResult.put(2,1);
+        VersionVector result = cof.cbCast(0);
+        Assert.assertTrue(sameMap(expectedResult,result.getVV()));
+    }
 }

@@ -6,9 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="4e3c4274-3557-4d0e-9b0b-f1d20247fc36" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalMessage.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorF.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/causalop/CausalOperatorF$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/CausalOperatorO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/causalop/VersionVector.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/causalop/VersionVector.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/causalop/CausalOpTestF.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/causalop/CausalOpTestF.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/causalop/CausalOpTestO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/causalop/CausalOpTestO.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,19 +69,6 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="ServerStarter" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="observableServer.ServerStarter" />
-      <module name="causalop" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="observableServer.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="CausalOpTestF" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="causalop" />
       <extension name="coverage">
@@ -90,6 +80,38 @@
       <option name="PACKAGE_NAME" value="causalop" />
       <option name="MAIN_CLASS_NAME" value="causalop.CausalOpTestF" />
       <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="CausalOpTestF.bcastTwice" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="causalop" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="causalop.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="causalop" />
+      <option name="MAIN_CLASS_NAME" value="causalop.CausalOpTestF" />
+      <option name="METHOD_NAME" value="bcastTwice" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="CausalOpTestF.oneDependencie" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="causalop" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="causalop.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="causalop" />
+      <option name="MAIN_CLASS_NAME" value="causalop.CausalOpTestF" />
+      <option name="METHOD_NAME" value="oneDependencie" />
+      <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -109,7 +131,7 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="SdgeImprovements" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="CausalOpTestO.bcastTwice" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="causalop" />
       <extension name="coverage">
         <pattern>
@@ -118,8 +140,9 @@
         </pattern>
       </extension>
       <option name="PACKAGE_NAME" value="causalop" />
-      <option name="MAIN_CLASS_NAME" value="causalop.SdgeImprovements" />
-      <option name="TEST_OBJECT" value="class" />
+      <option name="MAIN_CLASS_NAME" value="causalop.CausalOpTestO" />
+      <option name="METHOD_NAME" value="bcastTwice" />
+      <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -128,9 +151,9 @@
       <list>
         <item itemvalue="JUnit.CausalOpTestO" />
         <item itemvalue="JUnit.CausalOpTestF" />
-        <item itemvalue="Application.ServerStarter" />
-        <item itemvalue="Application.ServerStarterDemoniaco" />
-        <item itemvalue="JUnit.SdgeImprovements" />
+        <item itemvalue="JUnit.CausalOpTestO.bcastTwice" />
+        <item itemvalue="JUnit.CausalOpTestF.bcastTwice" />
+        <item itemvalue="JUnit.CausalOpTestF.oneDependencie" />
       </list>
     </recent_temporary>
   </component>

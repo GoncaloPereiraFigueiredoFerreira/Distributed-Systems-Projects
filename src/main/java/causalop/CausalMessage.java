@@ -60,13 +60,7 @@ public class CausalMessage<T> implements Message, Comparable<CausalMessage<T>> {
     }
 
     public int sumClock(){
-        /*
-        int sum = 0;
-        for (int i:vv){
-            sum = sum + i;
-        }
-        */
-        return vv.sumClock();
+        return vv.getLastSumClock();
     }
 
 

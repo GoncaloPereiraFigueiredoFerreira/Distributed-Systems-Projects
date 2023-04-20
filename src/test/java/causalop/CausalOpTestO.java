@@ -1,5 +1,6 @@
 package causalop;
 
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Observable;
 import observableServer.ServerStarter;
 import org.junit.Assert;
@@ -146,6 +147,30 @@ public class CausalOpTestO {
         expectedResult.put(1,1);
         expectedResult.put(2,1);
         VersionVector result = coo.cbCast(0);
+        Assert.assertTrue(sameMap(expectedResult,result.getVV()));
+    }
+
+    @Test
+    public void bcastTwice() {
+        setup2(); // all vv's start with 0's
+        vvk = new VersionVector(new int[]{0, 1, 0}); //k will send message after receiving from j
+        List<Integer> vvkDependencies = new ArrayList<>();
+        vvkDependencies.add(1);
+
+        CausalOperatorO coO = new CausalOperatorO<>(3,logs);
+        var l = Observable.just(
+                        new CausalMessage<>(null, 1, vvj.cbcast(1,new ArrayList<>())), //No dependencies
+                        new CausalMessage<>(null, 2, vvk.cbcast(2,vvkDependencies)), //Has dependencie from j
+                        new CausalMessage<>(null, 1, vvj.cbcast(1,new ArrayList<>())) //Depends on itself
+                )
+                .lift(coO)
+                .toList().blockingGet();
+
+        Map<Integer,Integer> expectedResult = new HashMap<>();
+        expectedResult.put(0,1);
+        expectedResult.put(1,2);
+        expectedResult.put(2,1);
+        VersionVector result = coO.cbCast(0);
         Assert.assertTrue(sameMap(expectedResult,result.getVV()));
     }
 }

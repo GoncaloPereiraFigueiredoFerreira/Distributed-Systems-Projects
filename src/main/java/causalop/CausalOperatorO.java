@@ -56,7 +56,12 @@ public class CausalOperatorO<T> implements ObservableOperator<T, CausalMessage<T
 
     private void evaluateDependencies(CausalMessage<T> m){
         Map<Integer,Integer> messageDependencies = m.vv.getVV();
-        messageDependencies.remove(m.j);
+
+        int c;
+        if(messageDependencies.size()==1 && (c = messageDependencies.get(m.j)) !=1){
+            messageDependencies.put(m.j,c-1);
+        }
+        else messageDependencies.remove(m.j);
 
         boolean sameDependencies = this.dependencies.entrySet().equals(messageDependencies.entrySet());
         if (!sameDependencies) {
@@ -95,6 +100,7 @@ public class CausalOperatorO<T> implements ObservableOperator<T, CausalMessage<T
                     }
                 }
                 else{
+                    message.vv.calculateVectorSum(vv);
                     messageBuffer.add(message);
                     Collections.sort(messageBuffer);//TODO melhorar inserçao
                 }
