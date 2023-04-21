@@ -32,12 +32,12 @@ public class CausalMessageReader implements ObservableOperator<Message, ByteBuff
 
             @Override
             public void onError(@NonNull Throwable e) {
-                observer.onError(e); // FIXME
+                observer.onError(e);
             }
 
             @Override
             public void onComplete() {
-                observer.onComplete(); // FIXME
+                observer.onComplete();
             }
         };
     }

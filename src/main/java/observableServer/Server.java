@@ -70,7 +70,6 @@ public class Server extends Thread {
                                     for(SocketChannel channel: channels){
                                         channel.write(message.toByteBuffer());
                                     }
-                                    //conn.write(ByteBuffer.wrap()); //TODO escrever de volta ao cliente
                                 });
                     } else {
                         throw new IllegalArgumentException("Unsupported message type");
