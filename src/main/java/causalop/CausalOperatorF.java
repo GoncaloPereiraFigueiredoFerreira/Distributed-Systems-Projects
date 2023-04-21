@@ -26,7 +26,7 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
 
     public CausalOperatorF(int n, VersionVector vv) {
         this.n = n;
-        this.vv = vv.Clone();
+        this.vv = vv.clone();
         this.sum=0;
         this.messageBuffer = new ArrayList<>();
         this.lastDeliveredKeys = new ArrayList<>();

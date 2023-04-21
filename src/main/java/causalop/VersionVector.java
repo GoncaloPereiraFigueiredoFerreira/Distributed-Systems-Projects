@@ -100,9 +100,6 @@ public class VersionVector implements Cloneable{
     public Map<Integer,Integer> getVV(){
         return this.vv.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
-    public VersionVector Clone(){
-        return new VersionVector(this.vv);
-    }
 
     @Override
     public VersionVector clone() {
