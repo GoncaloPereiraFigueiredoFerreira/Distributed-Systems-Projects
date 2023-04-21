@@ -83,7 +83,7 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
             @Override
             public void onSubscribe(Subscription subscription) {
                 parent = subscription;
-                parent.request(2);
+                parent.request(20);
                 down.onSubscribe(new Subscription() {
 
                     @Override
