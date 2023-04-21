@@ -6,13 +6,13 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>> {
     private final int n;
     private VersionVector vv;
     private List<Integer> lastDeliveredKeys;
-    private Map<Integer,Integer> dependencies;
     private int sum;
     private List<CausalMessage<T>> messageBuffer;
 
@@ -22,7 +22,6 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
         this.sum=0;
         this.messageBuffer = new ArrayList<>();
         this.lastDeliveredKeys = new ArrayList<>();
-        this.dependencies = new HashMap<>();
     }
 
     public CausalOperatorF(int n, VersionVector vv) {
@@ -31,7 +30,6 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
         this.sum=0;
         this.messageBuffer = new ArrayList<>();
         this.lastDeliveredKeys = new ArrayList<>();
-        this.dependencies = new HashMap<>();
     }
 
 
@@ -58,17 +56,12 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
 
     private void evaluateDependencies(CausalMessage<T> m){
         Map<Integer,Integer> messageDependencies = m.vv.getVV();
+        messageDependencies.remove(m.j);
 
-        int c;
-        if(messageDependencies.size()==1 && (c = messageDependencies.get(m.j)) !=1){
-            messageDependencies.put(m.j,c-1);
-        }
-        else messageDependencies.remove(m.j);
-
-        boolean sameDependencies = this.dependencies.entrySet().equals(messageDependencies.entrySet());
-        if (!sameDependencies) {
-            this.lastDeliveredKeys.clear();
-            this.dependencies = messageDependencies;
+        for (Map.Entry<Integer,Integer> entry:messageDependencies.entrySet()){
+            if(!(this.vv.getVV().get(entry.getKey())>entry.getValue())){
+                this.lastDeliveredKeys = this.lastDeliveredKeys.stream().filter(e-> e!=entry.getKey()).collect(Collectors.toList());
+            }
         }
         this.lastDeliveredKeys.add(m.j);
     }
@@ -77,7 +70,6 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
     public VersionVector cbCast(int id){
         VersionVector vector = vv.cbcast(id,this.lastDeliveredKeys);
         this.lastDeliveredKeys.clear();
-        this.dependencies.clear();
         return vector;
     }
 
