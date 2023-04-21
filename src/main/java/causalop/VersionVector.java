@@ -18,6 +18,7 @@ public class VersionVector implements Cloneable{
     public VersionVector(Map<Integer, Integer> vv) {
         this.vv = new HashMap<>();
         this.vv.putAll(vv);
+        vectorSum = 0;
     }
 
     public VersionVector(int nNodos){
@@ -25,6 +26,7 @@ public class VersionVector implements Cloneable{
         for(int i=0;i<nNodos;i++){
             vv.put(i,0);
         }
+        vectorSum = 0;
     }
 
     public VersionVector(int[] array){
@@ -32,6 +34,7 @@ public class VersionVector implements Cloneable{
         for(int i=0;i<array.length;i++){
             vv.put(i,array[i]);
         }
+        vectorSum = 0;
     }
 
     public Set<Integer> getKeys(){

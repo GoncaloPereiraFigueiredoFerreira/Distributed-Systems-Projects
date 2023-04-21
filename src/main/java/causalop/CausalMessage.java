@@ -10,7 +10,7 @@ public class CausalMessage<T> implements Message, Comparable<CausalMessage<T>> {
     public CausalMessage(T payload, int j, VersionVector v) {
         this.payload = payload;
         this.j = j;
-        this.vv = v;
+        this.vv = v.clone();
     }
 
     public ByteBuffer toByteBuffer() {
@@ -62,7 +62,6 @@ public class CausalMessage<T> implements Message, Comparable<CausalMessage<T>> {
     public int sumClock(){
         return vv.getLastSumClock();
     }
-
 
     @Override
     public int compareTo(CausalMessage<T> o) {
