@@ -15,6 +15,7 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
     private List<Integer> lastDeliveredKeys;
     private int sum;
     private List<CausalMessage<T>> messageBuffer;
+    private final int MAX_BUFFER = 20;
 
     public CausalOperatorF(int n) {
         this.n = n;
@@ -82,7 +83,7 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
             @Override
             public void onSubscribe(Subscription subscription) {
                 parent = subscription;
-                parent.request(1);
+                parent.request(2);
                 down.onSubscribe(new Subscription() {
 
                     @Override
@@ -100,6 +101,7 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
                 vv.increaseVersion(message.j);
                 evaluateDependencies(message);
                 down.onNext(message.payload);
+                parent.request(1);
             }
             @Override
             public void onNext(@NonNull CausalMessage<T> message) {
@@ -114,25 +116,22 @@ public class CausalOperatorF<T> implements FlowableOperator<T, CausalMessage<T>>
                                 deliver(cm);
                                 it.remove();
                                 it = messageBuffer.listIterator();
-                            } else this.onError(new Exception());
+                            }
                         }
                     }
                 }
-                else{
+                else if(messageBuffer.size() < MAX_BUFFER){
                     message.vv.calculateVectorSum(vv);
                     messageBuffer.add(message);
-                    Collections.sort(messageBuffer);//TODO melhorar inserçao
-                }
-                if(messageBuffer.size()<20){
-                    parent.request(1);
-                }
+                    Collections.sort(messageBuffer);
+                }else {onError(new Exception());}
             }
 
 
 
             @Override
             public void onError(@NonNull Throwable e) {
-                down.onError(e); // FIXME
+                down.onError(e);
             }
 
             @Override

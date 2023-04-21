@@ -94,13 +94,13 @@ public class CausalOperatorO<T> implements ObservableOperator<T, CausalMessage<T
                 else{
                     message.vv.calculateVectorSum(vv);
                     messageBuffer.add(message);
-                    Collections.sort(messageBuffer);//TODO melhorar inserçao
+                    Collections.sort(messageBuffer);
                 }
             }
 
             @Override
             public void onError(@NonNull Throwable e) {
-                down.onError(e); // FIXME
+                down.onError(e);
             }
 
             @Override
