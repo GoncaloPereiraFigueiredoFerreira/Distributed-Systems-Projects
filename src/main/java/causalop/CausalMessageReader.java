@@ -24,7 +24,7 @@ public class CausalMessageReader implements ObservableOperator<Message, ByteBuff
                     observer.onNext(m);
                 }catch (Exception e){
                     var s = StandardCharsets.UTF_8.decode(b.duplicate());
-                    observer.onNext(new ClientMessage(s));
+                    observer.onNext(new ClientMessage<>(s));
                 }
             }
 
@@ -32,12 +32,12 @@ public class CausalMessageReader implements ObservableOperator<Message, ByteBuff
 
             @Override
             public void onError(@NonNull Throwable e) {
-                observer.onError(e); // FIXME
+                observer.onError(e);
             }
 
             @Override
             public void onComplete() {
-                observer.onComplete(); // FIXME
+                observer.onComplete();
             }
         };
     }

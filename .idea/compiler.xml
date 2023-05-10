@@ -9,8 +9,5 @@
         <module name="causalop" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="causalop" target="17" />
-    </bytecodeTargetLevel>
   </component>
 </project>

@@ -4,13 +4,13 @@ import java.nio.ByteBuffer;
 
 public class CausalMessage<T> implements Message, Comparable<CausalMessage<T>> {
     int j;
-    int[] vv;
+    VersionVector vv;
     public T payload;
 
-    public CausalMessage(T payload, int j, int... v) {
+    public CausalMessage(T payload, int j, VersionVector v) {
         this.payload = payload;
         this.j = j;
-        this.vv = v;
+        this.vv = v.clone();
     }
 
     public ByteBuffer toByteBuffer() {
@@ -20,13 +20,13 @@ public class CausalMessage<T> implements Message, Comparable<CausalMessage<T>> {
             payloadBytes = payload.toString().getBytes();
             payloadLength = payloadBytes.length;
         }
-        ByteBuffer buffer = ByteBuffer.allocate(1 + Integer.BYTES + Integer.BYTES + Integer.BYTES + Integer.BYTES * vv.length + payloadLength);
+        ByteBuffer buffer = ByteBuffer.allocate(1 + Integer.BYTES + vv.toByteBuffer().limit() + payloadLength);
         buffer.put((byte) 0);
+
         buffer.putInt(j);
-        buffer.putInt(vv.length);
-        for (int v : vv) {
-            buffer.putInt(v);
-        }
+
+        buffer.put(vv.toByteBuffer());
+
         if (payload != null) {
             buffer.put(payloadBytes);
         }
@@ -39,12 +39,11 @@ public class CausalMessage<T> implements Message, Comparable<CausalMessage<T>> {
         if(start!=(byte) 0){
             throw new Exception();
         }
+
         int j = buffer.getInt();
-        int vvLength = buffer.getInt();
-        int[] vv = new int[vvLength];
-        for (int i = 0; i < vvLength; i++) {
-            vv[i] = buffer.getInt();
-        }
+
+        VersionVector vv = new VersionVector();
+        vv.fromByteBuffer(buffer);
 
         byte[] payloadBytes = new byte[buffer.remaining()];
         buffer.get(payloadBytes);
@@ -56,19 +55,13 @@ public class CausalMessage<T> implements Message, Comparable<CausalMessage<T>> {
         return new CausalMessage<T>(payload, j, vv);
     }
 
-    @Override
     public int getType() {
         return 0;
     }
 
     public int sumClock(){
-        int sum = 0;
-        for (int i:vv){
-            sum = sum + i;
-        }
-        return sum;
+        return vv.getLastSumClock();
     }
-
 
     @Override
     public int compareTo(CausalMessage<T> o) {
