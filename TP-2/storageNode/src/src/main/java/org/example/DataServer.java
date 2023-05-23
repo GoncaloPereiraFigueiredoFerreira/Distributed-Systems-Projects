@@ -12,7 +12,7 @@ public class DataServer {
     private Map<String,String> map;
     public DataServer(int hashingAlgorithm, int numberOfReplicas,
                       List<String> nodes) throws NoSuchAlgorithmException {
-        this.consistentHash = new ConsistentHash(1,2,List.of("server1","server2"));
+        this.consistentHash = new ConsistentHash(1,2,List.of(0,1));
         this.map = new TreeMap<>();
     }
 

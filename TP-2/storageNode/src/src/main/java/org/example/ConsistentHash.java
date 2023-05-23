@@ -13,11 +13,11 @@ public class ConsistentHash {
     private final SortedMap<BigInteger, Integer> circle = new TreeMap<>();
 
     public ConsistentHash(int hashingAlgorithm, int numberOfReplicas,
-                          List<String> nodes) throws NoSuchAlgorithmException {
-        this.hashingAlgorithm = new HashingAlgorithm(hashingAlgorithm);
+                          List<Integer> nodes) throws NoSuchAlgorithmException {
+        this.hashingAlgorithm = new HashingAlgorithm(numberOfReplicas,hashingAlgorithm); //TODO Pode nao ser numberOfReplicas
         this.numberOfReplicas = numberOfReplicas;
 
-        for (String node : nodes) {
+        for (Integer node : nodes) {
             add(node);
         }
     }
