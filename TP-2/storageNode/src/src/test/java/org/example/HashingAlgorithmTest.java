@@ -13,13 +13,13 @@ class HashingAlgorithmTest {
     HashingAlgorithm hashingAlgorithm;
     @BeforeEach
     void setUp() throws NoSuchAlgorithmException {
-        hashingAlgorithm= new HashingAlgorithm(1,1);
+        hashingAlgorithm= new HashingAlgorithm(1);
     }
 
     @Test
     void hash() {
-        BigInteger val1 =  hashingAlgorithm.hash(1);
-        BigInteger val2 =  hashingAlgorithm.hash(2);
-        assertEquals(val1, val2);
+        Integer val1 =  hashingAlgorithm.hash("server1");
+        Integer val2 =  hashingAlgorithm.hash("server2");
+        assertNotEquals(val1, val2);
     }
 }

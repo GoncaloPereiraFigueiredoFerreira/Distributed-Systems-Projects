@@ -17,9 +17,7 @@ Hashing functions:
  */
 public class HashingAlgorithm {
     private final MessageDigest messageDigest;
-    private int m;
-    public HashingAlgorithm(int m, int hashFunction) throws NoSuchAlgorithmException {
-        this.m = m;
+    public HashingAlgorithm(int hashFunction) throws NoSuchAlgorithmException {
         switch (hashFunction){
             case 1:
                 messageDigest = MessageDigest.getInstance("SHA-224");
@@ -44,16 +42,36 @@ public class HashingAlgorithm {
         }
     }
 
-    public BigInteger hash(Integer input){
-        // digest() method is called
-        // to calculate message digest of the input string
-        // returned as array of byte
-        byte[] byteArray = messageDigest.digest(ByteBuffer.allocate(m).putInt(input).array());
+    public Integer hash(String input) {
+        byte[] byteArray = messageDigest.digest(input.getBytes());
 
-        // Convert byte array into signum representation
-        BigInteger no = new BigInteger(1, byteArray);
+        // Take the first 4 bytes from the byte array
+        byte[] truncatedArray = new byte[4];
+        System.arraycopy(byteArray, 0, truncatedArray, 0, 4);
 
-        // return the HashText
-        return no;
+        // Convert the truncated byte array to an integer
+        int hashValue = 0;
+        for (byte b : truncatedArray) {
+            hashValue = (hashValue << 8) | (b & 0xFF);
+        }
+
+        return hashValue;
     }
+
+    public Integer hash(Integer input) {
+        byte[] byteArray = messageDigest.digest(ByteBuffer.allocate(4).putInt(input).array());
+
+        // Take the first 4 bytes from the byte array
+        byte[] truncatedArray = new byte[4];
+        System.arraycopy(byteArray, 0, truncatedArray, 0, 4);
+
+        // Convert the truncated byte array to an integer
+        int hashValue = 0;
+        for (byte b : truncatedArray) {
+            hashValue = (hashValue << 8) | (b & 0xFF);
+        }
+
+        return hashValue;
+    }
+
 }

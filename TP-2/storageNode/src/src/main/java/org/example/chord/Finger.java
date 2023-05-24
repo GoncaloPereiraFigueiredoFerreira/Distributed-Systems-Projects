@@ -2,25 +2,26 @@ package org.example.chord;
 
 public class Finger {
     private final int id; // node id
-    private final String hostname; // socket
-    private final int port; // socket
+    private final String address; // socket
 
-    public Finger(int id, String hostname, int port) {
+    public Finger(int id, String address) {
         this.id = id;
-        this.hostname = hostname;
-        this.port = port;
+        this.address = address;
+    }
+
+    @Override
+    public String toString() {
+        return "Finger{" +
+                "id=" + id +
+                ", address='" + address + '\'' +
+                '}';
     }
 
     public int getId() {
         return id;
     }
 
-    public String getHostname() {
-        return hostname;
-    }
-
-
-    public int getPort() {
-        return port;
+    public String getAddress() {
+        return address;
     }
 }

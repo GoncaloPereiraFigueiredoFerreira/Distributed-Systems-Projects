@@ -8,17 +8,39 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
 public class Node {
-    private final Integer CHORD_NODE_PORT;
+    @Override
+    public String toString() {
+        return "Node{" +
+                "nodeAddress="+ nodeAddress+
+                ",\n nodeId=" + nodeId +
+                ",\n successor =" + successor +
+                ",\n predecessor=" + predecessor +
+                "}\n";
+    }
+
+    private final String nodeAddress;
     private int nodeId;
     //private final HashMap<Integer,Finger> fingerTable;
     private ConsistentHash consistentHash;
     //private final int m;
-    String successor;
+    private Finger successor;
+    private Finger predecessor;
 
-    public String getSuccessor() {
+    public int getNodeId() {
+        return nodeId;
+    }
+
+    public String getNodeAddress() {
+        return nodeAddress;
+    }
+
+    public Finger getSuccessor() {
         return successor;
     }
 
+    public Finger getPredecessor() {
+        return predecessor;
+    }
     /*
     public Node(int id, int m, ConsistentHash consistentHash){
         this.consistentHash = consistentHash;
@@ -31,50 +53,42 @@ public class Node {
         this.m = m;
     }*/
 
-    public Node(int nodeId, String successor,int port) {
+    public Node(int nodeId,String nodeAddress) {
         this.nodeId = nodeId;
-        this.CHORD_NODE_PORT= port;
-        this.successor = successor;
+        this.nodeAddress = nodeAddress;
+        this.successor = null;
+        this.predecessor = null;
     }
 
-    public void join(String knownNodeAddress) {
-        try (ZContext context = new ZContext()) {
-            ZMQ.Socket socket = context.createSocket(SocketType.REQ);
-            socket.connect(knownNodeAddress);
+    public String processJoinRequest(int newNodeId,String newNodeAddress) {
+        Finger oldPrecessor = predecessor;
+        if(oldPrecessor==null){
+            oldPrecessor = new Finger(nodeId,nodeAddress);
+        }
 
-            // Send a join request to the known node
-            socket.send(String.format("JOIN %d", nodeId).getBytes(ZMQ.CHARSET), 0);
-
-            // Wait for the reply containing the successor node's address
-            byte[] reply = socket.recv(0);
-            String successorAddress = new String(reply, ZMQ.CHARSET);
-            if(!successorAddress.equals("")){
-                successor = successorAddress;
+        if (successor != null) {
+            if(true){ //todo STOP CONDITION
+                predecessor = new Finger(newNodeId,newNodeAddress);
+                return "STOP " + nodeId + " " + oldPrecessor.getId() + " " + oldPrecessor.getAddress();
             }
-            else successor = null;
+            else {
+                return "REDIRECT " + successor.getId() + " " + successor.getAddress();
+            }
+        }
+        else {
+            predecessor = new Finger(newNodeId,newNodeAddress);
+            return "STOP " + nodeId + " " + oldPrecessor.getId() +" "+ oldPrecessor.getAddress();
         }
     }
 
-    public String processJoinRequest(int newNodeId) {
-        if (successor != null) {
-            // Create a ZeroMQ REQ socket to communicate with the successor node
-            try (ZContext context = new ZContext()) {
-                ZMQ.Socket socket = context.createSocket(SocketType.REQ);
-                socket.connect(successor);
-
-                // Send a join request to the successor node
-                socket.send(String.format("JOIN %d", newNodeId).getBytes(ZMQ.CHARSET), 0);
-
-                // Wait for the reply containing the new successor node's address
-                byte[] reply = socket.recv(0);
-                return new String(reply, ZMQ.CHARSET);
-            }
-        } else return null;
+    public void updateSucessors(int newSuccessorId,String newSuccessorString,
+                                int newPredecessorId, String newPredecessorString) {
+        successor = new Finger(newSuccessorId,newSuccessorString);
+        predecessor = new Finger(newPredecessorId,newPredecessorString);
     }
 
-    public void processNewSucessor(int newNodeId) {
-        // The current node is the only node in the network
-        successor = String.format("tcp://localhost:%d", CHORD_NODE_PORT+newNodeId);
+    public void updateSucessor(int newSuccessorId,String newSuccessorString) {
+        successor = new Finger(newSuccessorId,newSuccessorString);
     }
 
 

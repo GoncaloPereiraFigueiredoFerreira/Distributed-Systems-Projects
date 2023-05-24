@@ -2,45 +2,35 @@ package org.example;
 
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collection;
-import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 
 public class ConsistentHash {
     private final HashingAlgorithm hashingAlgorithm;
     private final int numberOfReplicas;
-    private final SortedMap<BigInteger, Integer> circle = new TreeMap<>();
+    private final SortedMap<Integer, String> circle = new TreeMap<>();
 
-    public ConsistentHash(int hashingAlgorithm, int numberOfReplicas,
-                          List<Integer> nodes) throws NoSuchAlgorithmException {
-        this.hashingAlgorithm = new HashingAlgorithm(numberOfReplicas,hashingAlgorithm); //TODO Pode nao ser numberOfReplicas
+    public ConsistentHash(int hashingAlgorithm, int numberOfReplicas) throws NoSuchAlgorithmException {
+        this.hashingAlgorithm = new HashingAlgorithm(hashingAlgorithm);
         this.numberOfReplicas = numberOfReplicas;
-
-        for (Integer node : nodes) {
-            add(node);
-        }
     }
 
-    public void add(Integer node) {
+    public List<Integer> addNode(String nodeAddress) {
+        List<Integer> nodes = new ArrayList<>();
         for (int i = 0; i <numberOfReplicas; i++) {
-            circle.put(hashingAlgorithm.hash(node + i), node);
+            Integer key = hashingAlgorithm.hash(nodeAddress + i);
+            nodes.add(key);
+            circle.put(key,nodeAddress);
         }
+        return nodes;
     }
 
-    public void remove(Integer node) {
-        for (int i = 0; i <numberOfReplicas; i++) {
-            circle.remove(hashingAlgorithm.hash(node + i));
-        }
-    }
-
-    public Integer getNode(Integer key) {
+    public String getNode(Integer key) {
         if (circle.isEmpty()) {
             return null;
         }
-        BigInteger hash = hashingAlgorithm.hash(key);
+        Integer hash = hashingAlgorithm.hash(key);
         if (!circle.containsKey(hash)) {
-            SortedMap<BigInteger, Integer> tailMap = circle.tailMap(hash);
+            SortedMap<Integer, String> tailMap = circle.tailMap(hash);
             hash = tailMap.isEmpty() ? circle.firstKey() : tailMap.firstKey();
         }
         return circle.get(hash);
