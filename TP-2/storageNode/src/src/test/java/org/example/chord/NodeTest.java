@@ -11,15 +11,18 @@ class NodeTest {
 
     @Test
     void join() throws InterruptedException, NoSuchAlgorithmException {
-        Thread thread = new Thread(new NodeRunner(0,"tcp://localhost:5555",null,2));
+        Thread thread = new Thread(new NodeRunner(0,"tcp://localhost:5555",null,1));
         thread.start();
 
         // Create Chord nodes
-        Thread thread2 = new Thread(new NodeRunner(1,"tcp://localhost:5559","tcp://localhost:5555",2));
+        Thread thread2 = new Thread(new NodeRunner(1,"tcp://localhost:5559","tcp://localhost:5555",1));
         thread2.start();
 
+        Thread thread3 = new Thread(new NodeRunner(1,"tcp://localhost:5565","tcp://localhost:5555",1));
+        thread3.start();
+
        // System.out.println("Finished sleep");
-        NodeRunner test = new NodeRunner(2,"tcp://localhost:5562","tcp://localhost:5555",2);
+        NodeRunner test = new NodeRunner(2,"tcp://localhost:5562","tcp://localhost:5555",1);
         test.run();
 
         //Node node3 = new Node(3, null,port+3);

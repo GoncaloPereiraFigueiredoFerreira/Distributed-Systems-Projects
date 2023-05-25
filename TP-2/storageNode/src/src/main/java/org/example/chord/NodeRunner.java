@@ -90,7 +90,7 @@ public class NodeRunner implements Runnable {
 
                         node.updateSucessors(sucessorId, sucessorAddress, predecessorId, predecessorAddress);
 
-                        message = "REPLACESUCESSOR " + nextNodeId + " " + node.getNodeId() + " " + node.getNodeAddress();
+                        message = "REPLACESUCESSOR " + predecessorId + " " + node.getNodeId() + " " + node.getNodeAddress();
                         if (Objects.equals(predecessorAddress, nextNodeAddress)) {
                             socket.send(message, 0);
                             socket.recv();

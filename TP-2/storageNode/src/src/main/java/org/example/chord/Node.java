@@ -66,19 +66,11 @@ public class Node {
             oldPrecessor = new Finger(nodeId,nodeAddress);
         }
 
-        if (successor != null) {
-            if(true){ //todo STOP CONDITION
-                predecessor = new Finger(newNodeId,newNodeAddress);
-                return "STOP " + nodeId + " " + oldPrecessor.getId() + " " + oldPrecessor.getAddress();
-            }
-            else {
-                return "REDIRECT " + successor.getId() + " " + successor.getAddress();
-            }
+        if (successor != null && newNodeId > nodeId && !(nodeId < predecessor.getId() && newNodeId > predecessor.getId())) {
+            return "REDIRECT " + successor.getId() + " " + successor.getAddress();
         }
-        else {
-            predecessor = new Finger(newNodeId,newNodeAddress);
-            return "STOP " + nodeId + " " + oldPrecessor.getId() +" "+ oldPrecessor.getAddress();
-        }
+        predecessor = new Finger(newNodeId,newNodeAddress);
+        return "STOP " + nodeId + " " + oldPrecessor.getId() +" "+ oldPrecessor.getAddress();
     }
 
     public void updateSucessors(int newSuccessorId,String newSuccessorString,
