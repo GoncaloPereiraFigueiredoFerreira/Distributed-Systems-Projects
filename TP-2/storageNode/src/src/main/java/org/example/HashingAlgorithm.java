@@ -55,7 +55,7 @@ public class HashingAlgorithm {
             hashValue = (hashValue << 8) | (b & 0xFF);
         }
 
-        return hashValue;
+        return Math.abs(hashValue);
     }
 
     public Integer hash(Integer input) {
@@ -71,7 +71,7 @@ public class HashingAlgorithm {
             hashValue = (hashValue << 8) | (b & 0xFF);
         }
 
-        return hashValue;
+        return Math.abs(hashValue);
     }
 
 }

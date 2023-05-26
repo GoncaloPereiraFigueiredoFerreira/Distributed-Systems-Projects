@@ -3,20 +3,17 @@ package org.example.chord;
 import org.example.DataStorage;
 import org.zeromq.*;
 
-import java.net.Socket;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class NodeRunner implements Runnable {
     private final String startingNodeAddress;
     private Boolean isAddingNode;
     private final Integer defaultNode;
-    private static Random rand = new Random(System.nanoTime());
     private DataStorage dataStorage;
     private final Map<Integer,Node> nodes;
     private final String nodeAddress;
-    public NodeRunner(int id,String address,String startingNodeAddress,Integer numberOfReplicas) throws NoSuchAlgorithmException {
+    public NodeRunner(String address,String startingNodeAddress,Integer numberOfReplicas) throws NoSuchAlgorithmException {
         this.startingNodeAddress = startingNodeAddress;
         this.isAddingNode = false;
         this.dataStorage = new DataStorage(1,numberOfReplicas);
@@ -26,13 +23,11 @@ public class NodeRunner implements Runnable {
         defaultNode = ids.get(0);
         nodes = new HashMap<>();
         for (Integer nodeId:ids){
-            nodes.put(nodeId,new Node(nodeId,address));
+            Boolean isMaster = Objects.equals(nodeId, defaultNode) && Objects.equals(startingNodeAddress, nodeAddress);
+                nodes.put(nodeId,new Node(isMaster,nodeId,address));
         }
     }
 
-    private Boolean isMaster(){
-        return startingNodeAddress==null;
-    }
 
     @Override
     public void run() {
@@ -43,13 +38,31 @@ public class NodeRunner implements Runnable {
 
 
             for (Node node:nodes.values()) {
-                if ( !(isMaster() && node.getNodeId() == defaultNode)) {
+                if (!node.isMaster()) {
                     Thread newThread = new Thread(() -> {
-                        connectToRing(startingNodeAddress, node);
+                        node.joinRing(startingNodeAddress);
                     });
                     newThread.start();
                 }
             }
+
+            Thread periodicCounter = new Thread(() -> {
+                try {
+                    periodicStabilization(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            periodicCounter.start();
+
+            Thread periodicFixCounter = new Thread(() -> {
+                try {
+                    periodicFingerFix(100);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            periodicFixCounter.start();
 
             while (!Thread.currentThread().isInterrupted()) {
                 processRequest(frontend);
@@ -57,80 +70,29 @@ public class NodeRunner implements Runnable {
         }
     }
 
-    public void connectToRing(String startingNode,Node node){
-        String nextNodeAddress = startingNode;
-        if(isMaster())
-            nextNodeAddress= nodeAddress;
-        Integer nextNodeId = null;
-        try (ZContext context = new ZContext()) {
-            while (nextNodeAddress!=null) {
-
-                ZMQ.Socket socket = context.createSocket(SocketType.DEALER);
-                String identity = String.format(
-                        "%04X-%04X", rand.nextInt(), rand.nextInt()
-                );
-                socket.setIdentity(identity.getBytes(ZMQ.CHARSET));
-                socket.connect(nextNodeAddress);
-
-
-                String message = "JOIN " + nextNodeId + " " + node.getNodeId() + " " + node.getNodeAddress();
-                socket.send(message, 0);
-
-                byte[] reply = socket.recv(0);
-                String replyString = new String(reply, ZMQ.CHARSET);
-
-
-                String[] values = replyString.split("\\s+");
-                switch (values[0]) {
-                    case "STOP" -> {
-                        int sucessorId = Integer.parseInt(values[1]);
-                        String sucessorAddress = nextNodeAddress;
-                        int predecessorId = Integer.parseInt(values[2]);
-                        String predecessorAddress = values[3];
-
-                        node.updateSucessors(sucessorId, sucessorAddress, predecessorId, predecessorAddress);
-
-                        message = "REPLACESUCESSOR " + predecessorId + " " + node.getNodeId() + " " + node.getNodeAddress();
-                        if (Objects.equals(predecessorAddress, nextNodeAddress)) {
-                            socket.send(message, 0);
-                            socket.recv();
-                        } else {
-                            context.destroySocket(socket);
-                            sendMsgWithDealer(context, identity,predecessorAddress,message);
-                        }
-                        context.destroySocket(socket);
-                        if(isMaster())
-                            sendMsgWithDealer(context, identity,nodeAddress,"JOINCOMPLETED");
-                        else sendMsgWithDealer(context, identity,startingNodeAddress,"JOINCOMPLETED");
-                        nextNodeAddress = null;
-                    }
-                    case "NACK" -> {
-                        Thread.sleep(500);
-                    }
-                    case "REDIRECT" -> {
-                        nextNodeId = Integer.parseInt(values[1]);
-                        nextNodeAddress = values[2];
-                    }
-                    default -> System.out.println("erro");
-                }
-                context.destroySocket(socket);
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+    public void periodicStabilization(long duration) throws InterruptedException {
+        while (true){
+            Thread.sleep(duration);
+            for (Node n:nodes.values())
+                if (n.isWorking())
+                    n.stabilize();
         }
-        System.out.println("Node "+ node.getNodeId() +" finished connection to ring {"+nodes.values()+"}");
     }
 
-    private void sendMsgWithDealer(ZContext context,String identity, String destiny,String message) {
-        ZMQ.Socket socket = context.createSocket(SocketType.DEALER);
-        socket.setIdentity(identity.getBytes(ZMQ.CHARSET));
-
-        socket.connect(destiny);
-        socket.send(message, 0);
-
-        socket.recv();
-        context.destroySocket(socket);
+    public void periodicFingerFix(long duration) throws InterruptedException {
+        Integer next = 1;
+        while (true){
+            Thread.sleep(duration);
+            Boolean reset = false;
+            for (Node n:nodes.values())
+                if (n.isWorking())
+                    reset = n.fix_Fingers(next);
+            if (reset)
+                next=2;
+            else next++;
+        }
     }
+
 
     public void processRequest(ZMQ.Socket socket) {
         System.out.println("Listening {"+nodes.values()+"}");
@@ -140,9 +102,9 @@ public class NodeRunner implements Runnable {
         assert (content != null);
         msg.destroy();
 
-        String returnMessage = processMessageContent(new String(content.getData(), ZMQ.CHARSET));
+        String returnMessage = processMessage(new String(content.getData(), ZMQ.CHARSET));
         ZFrame newContent;
-        newContent = new ZFrame(Objects.requireNonNullElse(returnMessage, "ack"));
+        newContent = new ZFrame(Objects.requireNonNullElse(returnMessage, "empty"));
 
         address.send(socket,ZFrame.REUSE + ZFrame.MORE);
         newContent.send(socket, ZFrame.REUSE);
@@ -152,46 +114,61 @@ public class NodeRunner implements Runnable {
         content.destroy();
     }
 
-    private String processMessageContent(String requestString) {
+    private String processMessage(String requestString) {
         String[] values = requestString.split("\\s+");
+        Integer wantedNode;
+        if(Objects.equals(values[0], "null"))
+            wantedNode=defaultNode;
+        else wantedNode = Integer.parseInt(values[0]);
 
+
+        String[] processedValues = new String[values.length - 1];
+        System.arraycopy(values, 1, processedValues, 0, processedValues.length);
+
+        return processMessageContent(processedValues,nodes.get(wantedNode));
+    }
+
+    private String processMessageContent(String[] values,Node workingNode) {
         switch (values[0]) {
-            case "JOIN" -> {
-                System.out.println("Node address: "+ this.nodeAddress  + ":received join");
+            case "find_successor" -> {
+                System.out.println("Node address: "+ this.nodeAddress  + ":received find_successor");
+                int originNodeId = Integer.parseInt(values[1]);
 
-                if(isMaster()){
-                    if(isAddingNode) {
-                        return "NACK";
-                    }
-                    else isAddingNode=true;
-                }
-                Integer wantedNode;
-                if(Objects.equals(values[1], "null"))
-                    wantedNode=defaultNode;
-                else wantedNode = Integer.parseInt(values[1]);
-
-                int originNodeId = Integer.parseInt(values[2]);
-                String nodeAddress = values[3];
-
-                return nodes.get(wantedNode).processJoinRequest(originNodeId, nodeAddress);
+                Finger successor = workingNode.findSuccessor(originNodeId);
+                return "successor " + successor.getId() + " " + successor.getAddress();
             }
-            case "JOINCOMPLETED" -> {
-                System.out.println("Node address: "+ this.nodeAddress  + ": received JoinComplete");
-                isAddingNode=false;
+            case "notify" -> {
+                System.out.println("Node address: "+ this.nodeAddress  + ":received notify");
+                int originNodeId = Integer.parseInt(values[1]);
+                String originNodeAddress = values[2];
+
+                workingNode.notify(new Finger(originNodeId,originNodeAddress));
                 return "ACK";
             }
-            case "REPLACESUCESSOR" -> {
-                System.out.println("Node address: "+ this.nodeAddress  + ":received replace");
-                Integer wantedNode;
-                if(Objects.equals(values[1], "null"))
-                    wantedNode=defaultNode;
-                else wantedNode = Integer.parseInt(values[1]);
-
-                int newSuccessorId = Integer.parseInt(values[2]);
-                String nodeAddress = values[3];
-                nodes.get(wantedNode).updateSucessor(newSuccessorId,nodeAddress);
-                return null;
+            case "add_node" -> {
+                System.out.println("Node address: "+ this.nodeAddress  + ":received add_node");
+                if(workingNode.isMaster() && !isAddingNode) {
+                    isAddingNode = true;
+                    return "ACK";
+                }
+                else return "NACK";
             }
+            case "join_completed" -> {
+                System.out.println("Node address: "+ this.nodeAddress  + ": received JoinComplete");
+                if(workingNode.isMaster() && isAddingNode) {
+                    isAddingNode=false;
+                    return "ACK";
+                }
+                else return "NACK";
+            }
+            case "get_predecessor" -> {
+                Finger predecessor = workingNode.getPredecessor();
+                if(predecessor==null){
+                    return "get_predecessor_response null";
+                }
+                else return "get_predecessor_response " + predecessor.getId() + " " + predecessor.getAddress();
+            }
+
             default -> {
                 System.out.println("Node address: "+ this.nodeAddress  + ":received invalid request {" + values[0] + "}");
                 return null;

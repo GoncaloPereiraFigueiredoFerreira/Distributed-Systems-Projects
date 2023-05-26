@@ -1,11 +1,7 @@
 package org.example.chord;
 
-import org.example.ConsistentHash;
-
-import java.util.HashMap;
-import org.zeromq.SocketType;
-import org.zeromq.ZContext;
-import org.zeromq.ZMQ;
+import java.util.Arrays;
+import java.util.Objects;
 
 public class Node {
     @Override
@@ -13,17 +9,17 @@ public class Node {
         return "Node{" +
                 "nodeAddress="+ nodeAddress+
                 ",\n nodeId=" + nodeId +
-                ",\n successor =" + successor +
+                ",\n successors =" + Arrays.toString(fingerTable) +
                 ",\n predecessor=" + predecessor +
                 "}\n";
     }
-
+    private final NodeRequestsInterface nodeRequests = new NodeRequests();
+    private final Boolean master;
+    private Boolean working;
     private final String nodeAddress;
     private int nodeId;
-    //private final HashMap<Integer,Finger> fingerTable;
-    private ConsistentHash consistentHash;
-    //private final int m;
-    private Finger successor;
+    private final Finger[] fingerTable;
+    private final int m;
     private Finger predecessor;
 
     public int getNodeId() {
@@ -34,81 +30,105 @@ public class Node {
         return nodeAddress;
     }
 
-    public Finger getSuccessor() {
-        return successor;
+    public Finger getSuccessor(){
+        return fingerTable[0];
+    }
+
+    public Boolean isMaster() {
+        return master;
+    }
+
+    public Node(Boolean master, int nodeId, String nodeAddress) {
+        this.master = master;
+        this.working=master; // not mistaken, if not master then it is not working on initialization
+        this.nodeId = nodeId;
+        this.nodeAddress = nodeAddress;
+        this.predecessor = null;
+        this.m = 31;
+        this.fingerTable = new Finger[m+1];
+        for (int i = 0; i<=m; i++)
+            fingerTable[i]=myFinger();
     }
 
     public Finger getPredecessor() {
         return predecessor;
     }
-    /*
-    public Node(int id, int m, ConsistentHash consistentHash){
-        this.consistentHash = consistentHash;
-        this.nodeId = id;
 
-        fingerTable= new HashMap<>();
-        for (int k = 1; k <=m ; k++){
-            fingerTable.put(k,new Finger(consistentHash.getNode(k),"localhost",12345)); //todo change
-        }
-        this.m = m;
-    }*/
-
-    public Node(int nodeId,String nodeAddress) {
-        this.nodeId = nodeId;
-        this.nodeAddress = nodeAddress;
-        this.successor = null;
-        this.predecessor = null;
+    public Boolean isWorking() {
+        return working;
     }
 
-    public String processJoinRequest(int newNodeId,String newNodeAddress) {
-        Finger oldPrecessor = predecessor;
-        if(oldPrecessor==null){
-            oldPrecessor = new Finger(nodeId,nodeAddress);
+    public void updateSuccessor(int newSuccessorId, String newSuccessorAddress) {
+        fingerTable[0] = new Finger(newSuccessorId,newSuccessorAddress);
+    }
+
+    public void joinRing(String startingNode){
+        nodeRequests.join_start_Request(startingNode);
+        this.fingerTable[0] = nodeRequests.find_successor_request(nodeId,new Finger(null,startingNode));
+        working = true;
+        nodeRequests.join_complete_Request(startingNode);
+    }
+
+    public boolean fix_Fingers(Integer next){
+        boolean reset = false;
+        if(next>m){
+            reset = true;
+            next=1;
         }
 
-        if (successor != null && newNodeId > nodeId && !(nodeId < predecessor.getId() && newNodeId > predecessor.getId())) {
-            return "REDIRECT " + successor.getId() + " " + successor.getAddress();
+        int result = (int) (nodeId + Math.pow(2, next - 1) % Math.pow(2, 31));
+        fingerTable[next] = nodeRequests.find_successor_request(result,myFinger());
+        return reset;
+    }
+
+    public void stabilize() {
+        Finger x;
+        if(Objects.equals(fingerTable[0], myFinger())) {
+            x = predecessor; //evitar requests quando o pedido é local
         }
-        predecessor = new Finger(newNodeId,newNodeAddress);
-        return "STOP " + nodeId + " " + oldPrecessor.getId() +" "+ oldPrecessor.getAddress();
-    }
-
-    public void updateSucessors(int newSuccessorId,String newSuccessorString,
-                                int newPredecessorId, String newPredecessorString) {
-        successor = new Finger(newSuccessorId,newSuccessorString);
-        predecessor = new Finger(newPredecessorId,newPredecessorString);
-    }
-
-    public void updateSucessor(int newSuccessorId,String newSuccessorString) {
-        successor = new Finger(newSuccessorId,newSuccessorString);
-    }
-
-
-
-
-
-
-
-
-    /*
-    public int findSuccessor(int id) {
-        if (id >= this.id && id <= successor)
-            return successor;
         else {
-            int closestPrecedingNode = closestPrecedingNode(id);
-            return closestPrecedingNode.findSuccessor(id);
+            x = nodeRequests.findPredecessor(fingerTable[0]);
+        }
+        if (x != null && isInRange(x.getId(), nodeId, fingerTable[0].getId())) {
+            fingerTable[0] = x; // Update current node's successor to be its predecessor
+        }
+        if(!Objects.equals(fingerTable[0], myFinger())) {
+            nodeRequests.notifyRequest(myFinger(), fingerTable[0]);
         }
     }
 
-    public int closestPrecedingNode(int id) {
-        for (int i = m; i >= 1; i--) {
-            if (isInRange(fingerTable[i].getId(), this.id, id))
-                return fingerTable[i].getId();
+    public void notify(Finger n){
+        if(predecessor==null || isInRange(n.getId(), predecessor.getId(), nodeId))
+            predecessor=n;
+    }
+
+
+    public Finger findSuccessor(int id) {
+        if(isInRange(id, nodeId, fingerTable[0].getId()))
+            return fingerTable[0];
+        return closestPrecedingNode(id);
+    }
+
+    private Finger closestPrecedingNode(int id) {
+        if(m>1) {
+            for (int i = m; i >= 1; i--) {
+                if (isInRange(id, nodeId, fingerTable[i].getId()))
+                    return fingerTable[i];
+            }
         }
-        return id;
+        return myFinger();
+    }
+
+    private Finger myFinger(){
+        return new Finger(nodeId,nodeAddress);
     }
 
     private boolean isInRange(int value, int start, int end) {
         // Implementation to check if value is within the range (start, end]
-    }*/
+        if (start < end) {
+            return value > start && value <= end;
+        } else {
+            return value > start || value <= end;
+        }
+    }
 }

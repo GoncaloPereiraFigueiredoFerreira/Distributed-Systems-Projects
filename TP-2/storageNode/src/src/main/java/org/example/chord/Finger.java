@@ -1,10 +1,12 @@
 package org.example.chord;
 
+import java.util.Objects;
+
 public class Finger {
-    private final int id; // node id
+    private final Integer id; // node id
     private final String address; // socket
 
-    public Finger(int id, String address) {
+    public Finger(Integer id, String address) {
         this.id = id;
         this.address = address;
     }
@@ -17,7 +19,15 @@ public class Finger {
                 '}';
     }
 
-    public int getId() {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Finger finger = (Finger) o;
+        return Objects.equals(id, finger.id) && Objects.equals(address, finger.address);
+    }
+
+    public Integer getId() {
         return id;
     }
 
