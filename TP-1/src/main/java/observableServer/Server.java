@@ -6,14 +6,8 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.observables.GroupedObservable;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.channels.spi.SelectorProvider;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,12 +31,12 @@ public class Server extends Thread {
         try {
 
 
-            var loop = new MainLoop();
+            var loop = new MainLoop(channels,nServers,identifier);
             var server = loop.accept(ss);
 
             // Subscribe method catches the onNext callbacks
-            CausalOperator co = new CausalOperator(nServers,logger);
-            /*
+            CausalOperatorO co = new CausalOperatorO(nServers,logger);
+
             for(SocketChannel channel:channels){
                 @NonNull Observable<GroupedObservable<Integer, Message>> in = loop.read(channel)
                                                                                   .lift(new CausalMessageReader())
@@ -53,7 +47,7 @@ public class Server extends Thread {
                         .subscribe(s -> logger.log(Level.INFO,"received: " + s));
                 });
             }
-*/
+
             server.subscribe(conn -> {
                 @NonNull Observable<GroupedObservable<Integer, Message>> in =
                         loop.read(conn)
@@ -70,13 +64,12 @@ public class Server extends Thread {
                                 });
                     } else if (group.getKey() == 1) { //Client messages
                         group.map(message -> (ClientMessage) message)
-                                .map(message -> new CausalMessage<>(message.getContent(),identifier,co.getAndIncrementVV(identifier)))
+                                .map(message -> new CausalMessage<>(message.getContent(),identifier,co.cbCast(identifier)))
                                 .subscribe(message -> {
                                     logger.log(Level.INFO,"Server "+ identifier+" received client msg: " + message.payload);
-                                    for(SocketChannel channel:channels){
+                                    for(SocketChannel channel: channels){
                                         channel.write(message.toByteBuffer());
                                     }
-                                    //conn.write(ByteBuffer.wrap()); //TODO escrever de volta ao cliente
                                 });
                     } else {
                         throw new IllegalArgumentException("Unsupported message type");
