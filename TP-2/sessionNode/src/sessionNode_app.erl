@@ -25,7 +25,7 @@ stop(_State) ->
 main(Port) ->
     io:format("Sessao na porta ~p~n",[Port]),
     {ok, LSock} = gen_tcp:listen(Port, [{active, once}, {packet, line},{reuseaddr, true}]),
-    Session = spawn(fun() -> session(#{}) end),
+    Session = spawn(fun() -> session(#{},orSet:new(),orSet:new()) end),
     spawn(fun() -> timer(?UPDATE,Session) end),
     %Manager ! {enter,Session},
     acceptor(LSock, Session),
@@ -59,50 +59,63 @@ login(Sock) ->
 % Users = map Pid -> {Name,Thortled,{Num de pedidos no ultimo intervalo,lista de num de pedidos por intervalo, numero total de pedidos(sum da lista)}}
 % Thortled = false or {true,time_remaning}
 
-% Id_user = {All_users,Ban_user,My_ban}
 % All_users = orSet de para saber o numero total de useres para efetuar o castigo do thortle
 % Ban_user = orSet com todos os users que foram banidos no sistema para que ao trocar de sessao continuem banidos
-% My_ban = lsita especifica a cada sessao para saber quais os clientes que estao banidos por esta sessao
 
 % responsabilidade de retirar um cliente do ban e da sessao que o baniu 
 
-session(Users) ->
+session(Users,All_users,Ban_user) ->
     receive
         {sessions,Sessions} ->
             io:format("Sessions: ~p~n",[Sessions]),
-            session(Users);
+            session(Users,All_users,Ban_user);
         {request,Pid,T} ->
             {Nome,Trortled,{Num,L,Mean}} = maps:get(Pid,Users),
                 case {Trortled,Num} of
                     {false,Num} ->  
                         Pid ! {resp,"ok"},
-                        session(maps:put(Pid,{Nome,false,{Num + 1,L,Mean}},Users));
+                        session(maps:put(Pid,{Nome,false,{Num + 1,L,Mean}},Users),All_users,Ban_user);
                     {{true,_},Num} when Num < ?MAX_MESSAGE ->
                         Pid ! {resp,"ok"},
-                        session(maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users));
+                        session(maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users),All_users,Ban_user);
                     {_,_} ->
                         Pid ! {resp,"false"},
-                        session(maps:put(Pid,{Nome,Trortled,{Num,L,Mean}},Users))
+                        session(maps:put(Pid,{Nome,Trortled,{Num,L,Mean}},Users),All_users,Ban_user)
                 end;
             
         {timer} ->
-            Users1 = maps:map(fun(_,Value) -> update_request(Value) end,Users),
-            io:format("Dic timer ~p~n",[Users1]),
-            session(Users1);
+            {{Ban_user1,Delta},Users1} = 
+                maps:fold(fun(Key,Value,{{Acc_ban,Acc_ban_delta},Acc_user}) -> 
+                    {B,S} = update_request(Value),
+                    case B of
+                        add -> 
+                            {New_ban,New_delta} = orSet:add(Key,self(),Acc_ban),
+                            {{orSet:join(Acc_ban,New_ban),orSet:join(Acc_ban_delta,New_delta)},maps:put(Key,S,Acc_user)};
+                        remove -> 
+                            {New_ban,New_delta} = orSet:remove(Key,Acc_ban),
+                            {{orSet:join(Acc_ban,New_ban),orSet:join(Acc_ban_delta,New_delta)},maps:put(Key,S,Acc_user)};
+                        same -> {{Acc_ban,Acc_ban_delta},maps:put(Key,S,Acc_user)}
+                    end 
+                end,{{Ban_user,orSet:new()},#{}},Users),
+            io:format("Dic timer ~p ~nBan Users: ~p~nDelta: ~p~n",[Users1,orSet:elements(Ban_user1),Delta]),
+            session(Users1,All_users,Ban_user1);
         {login, Pid, Name} ->
-            session(maps:put(Pid,{Name,false,{0,[],0}},Users));
+            {All_users1,Delta} = orSet:add(Name,self(),All_users), 
+            session(maps:put(Pid,{Name,false,{0,[],0}},Users),All_users1,Ban_user);
         {leave, Pid} ->
-            session(maps:remove(Pid,Users))
+            {Name,_,_} = maps:get(Pid,Users),
+            {All_users1,Delta} = orSet:remove(Name,All_users),
+            session(maps:remove(Pid,Users),All_users1,Ban_user)
     end.
 
 update_request({Nome,T,{Num,List,_}}) ->
     Intervale = ?TIME div ?UPDATE,
     ListR = update_request([Num|List],Intervale), 
     case {T,lists:sum(ListR)/60} of
-        {false,N} when N > ?LIMIT -> {Nome,{true,60},{0,ListR,N}};
-        {false,N} -> {Nome,T,{0,ListR,N}};
-        {{true,Time},N} when Time > ?UPDATE -> {Nome,{true,Time-?UPDATE},{0,ListR,N}};
-        {{true,_},N} -> {Nome,false,{0,ListR,N}}
+        {false,N} when N > ?LIMIT -> {add,{Nome,{true,60},{0,ListR,N}}};
+        {false,N} -> {same,{Nome,T,{0,ListR,N}}};
+        {{true,Time},N} when Time > ?UPDATE -> {same,{Nome,{true,Time-?UPDATE},{0,ListR,N}}};
+        {{true,_},N} -> {remove,{Nome,false,{0,ListR,N}}}
     end.
 
 
@@ -129,16 +142,16 @@ user(Sock,Session) ->
 
 proc_data(Data) ->
     case Data of
-        ["login",Name|_] -> 
+        ["li",Name|_] -> 
             io:format("recebeu login~n",[]),
             {login,self(),Name};
-        ["logout"|_] -> 
+        ["lo"|_] -> 
             io:format("recebeu logout~n",[]),
             {leave,self()};
-        ["read"|T] -> 
+        ["r"|T] -> 
             io:format("recebeu read~n",[]),
             {request,self(),{read,T}};
-        ["write"|T] -> 
+        ["w"|T] -> 
             io:format("recebeu write~n",[]),
             {request,self(),{write,T}};
         _ -> 
@@ -150,8 +163,8 @@ parse_data(Data) ->
     lists:foldr(fun(Elem,Acc) -> split(Elem,Acc) end,[],Data).
 
 split($\n,A) -> A;    
-split($ ,[[]|T]) -> [[]|T];
-split($ ,A) -> [[]] ++ A;
+split($|,[[]|T]) -> [[]|T];
+split($|,A) -> [[]] ++ A;
 split(Elem,[H|T]) -> [[Elem] ++ H|T];
 split(Elem,[]) -> [[Elem]].
 
