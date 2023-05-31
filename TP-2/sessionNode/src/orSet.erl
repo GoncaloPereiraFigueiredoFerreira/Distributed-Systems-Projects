@@ -1,6 +1,6 @@
 -module(orSet).
 
--export([new/0,elements/1,add/3,remove/3,join/1,join/2]).
+-export([new/0,elements/1,add/3,remove/2,join/1,join/2]).
 
 % orSet = {Map(elem -> Set({id,c[id]})),CasualContext}
 
@@ -22,21 +22,27 @@ add(Elem,Id,{Map,CC}) ->
 			{{Map1,CC1},{maps:put(Elem,sets:add_element({Id,Val + 1},sets:new()),#{}),maps:put(Id,Val + 1,#{})}}
 	end.
 
-remove(Elem,Id,{Map,CC}) -> 
+remove(Elem,{Map,CC}) -> 
 	Set = maps:get(Elem,Map),
-	case sets:to_list(sets:filter(fun({Set_id,_}) ->io:format("Id: ~p | Set_id: ~p | Result: ~p~n",[Id,Set_id,Id == Set_id]) ,Id == Set_id end,Set)) of
-		[{Id,Clock}] -> 
-			Delta = 
-				maps:filtermap(fun(Key,Value) -> 
-					not sets:is_empty(sets:filter(fun({Set_id,Val}) -> 
-						P1 = Id == Set_id, P2 = Set_id /= Key,P3 = Val < Clock, P1 and P2 and P3 
-					end,Value)) 
-				end,Map),
-			Del_CC = maps:put(Id,Clock,#{});
-		_ ->
-			Delta = #{},
-			Del_CC = #{}
-	end,
+	Lista = sets:to_list(Set),
+
+	Delta = 
+		maps:fold(fun(Key,Val,Acum) ->
+			F_val = 
+				sets:filter(fun({Set_id,Set_Val}) ->
+					lists:foldl(fun({Id,Clock}, Acum_bool) ->
+						P1 = Id == Set_id, P2 = Set_Val < Clock, (P1 and P2) or Acum_bool 
+					end,false,Lista) 
+				end,Val),
+
+			case sets:is_empty(F_val) of
+				true -> Acum;
+				false -> maps:put(Key,F_val,Acum)
+			end
+		end,#{},Map),
+
+	Del_CC = lists:foldl(fun({Id,Clock},Acum) -> maps:put(Id,Clock,Acum) end,#{},Lista),
+
 	{{maps:remove(Elem,Map),CC},{Delta,Del_CC}}.
 
 
