@@ -21,6 +21,10 @@ public class ClientTest {
             "geleia","nutella"
     };
 
+    private boolean sameMap(Map<String,String> m1, Map<String,String> m2) {
+        return m1.entrySet().equals(m2.entrySet());
+    }
+
 
     @Test
     public void simpleTest() throws IOException {
@@ -29,8 +33,7 @@ public class ClientTest {
         co1.readNValues(new String[]{"pão"});
         HashMap<String,String> expected = new HashMap<>();
         expected.put("pão","manteiga");
-        Assert.assert
-         co1.returnResults() == expected;
+        assert sameMap(expected,co1.returnResults());
     }
 
     @Test
@@ -50,7 +53,7 @@ public class ClientTest {
         expected.put("croissant","fiambre");
         expected.put("baguete","queijo");
         expected.put("broa","mel");
-        assert expected == read;
+        assert sameMap(expected,read);
 
     }
 
@@ -108,7 +111,7 @@ public class ClientTest {
         // Test expected
         HashMap<String,String> expected = new HashMap<>();
         expected.put("pão","manteiga");
-        assert co1.returnResults() == expected;
+        assert sameMap(expected,co1.returnResults());
     }
 
     // Maybe should check performance metrics
