@@ -70,32 +70,54 @@ public class NodeRunner implements Runnable {
     }
 
     public void periodicStabilization(long duration) throws InterruptedException {
-        while (true){
-            Thread.sleep(duration);
-            for (Node n:nodes.values()) //TODO bottleneck se tiver muitas replicas
+        long variableDuration = duration;
+        while (!Thread.currentThread().isInterrupted()){
+            Thread.sleep(variableDuration);
+            boolean allStable = true;
+            for (Node n:nodes.values())
                 if (n.isWorking())
-                    n.stabilize();
+                    if(!n.stabilize())
+                        allStable=false;
+            if(!allStable)
+                variableDuration=duration;
+            else {
+                System.out.println("periodicStabilization stable");
+                variableDuration = duration*5;
+            }
         }
     }
 
     public void periodicFingerFix(long duration) throws InterruptedException {
         int next = 1;
-        while (true){
-            Thread.sleep(duration);
-            System.out.println("Fix finger");
+        long variableDuration = duration;
+        while (!Thread.currentThread().isInterrupted()){
+            Thread.sleep(variableDuration);
+
             boolean reset = false;
+            boolean allStable = true;
             for (Node n:nodes.values())
-                if (n.isWorking())
-                    reset = n.fix_Fingers(next);
+                if (n.isWorking()) {
+                    Map<String, Boolean> booleans = n.fix_Fingers(next);
+                    reset = booleans.get("reset");
+                    if(!booleans.get("stable"))
+                        allStable=false;
+                }
+
             if (reset)
                 next=2;
             else next++;
+
+            if(!allStable)
+                variableDuration=duration;
+            else {
+                System.out.println("fixFinger stable");
+                variableDuration = duration*5;
+            }
         }
     }
 
 
     public void processRequest(ZMQ.Socket socket) {
-        System.out.println("Listening {"+nodes.values()+"}");
         ZMsg msg = ZMsg.recvMsg(socket);
         ZFrame address = msg.pop();
         ZFrame content = msg.pop();
