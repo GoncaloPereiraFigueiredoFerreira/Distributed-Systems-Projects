@@ -10,7 +10,7 @@ public class ClientBasic {
         InputMenu login = new InputMenu("Please specify your login name","Username");
         String[] sessionServers = new String[]{"Server1","Server2","Server3"};
         Menu chooseSession = new Menu("Please specify to which server do you wish to connect:",sessionServers);
-        String[] actions = new String[]{"Write a key-value", "Read values"};
+        String[] actions = new String[]{"Write a key-value", "Read values", "Logout"};
         Menu chooseAction = new Menu("Choose an action",actions);
         InputMenu keyInput = new InputMenu("Input a key","key");
         InputMenu valueInput = new InputMenu("Input a value", "value");
@@ -21,8 +21,9 @@ public class ClientBasic {
             chooseSession.executa();
             if (chooseSession.getOption() != 0){
                 try {
-                    ClientOperations co = new ClientOperations(user,InetSocketAddress.createUnresolved("localhost",30));
-                    while(chooseAction.getOption()!=-1) {
+                    ClientOperations co = new ClientOperations(null);
+                    co.login(user);
+                    while(chooseAction.getOption()!=-1 && chooseAction.getOption() != 3 ) {
                         chooseAction.executa();
                         switch (chooseAction.getOption()) {
                             case 1 -> {
@@ -47,8 +48,13 @@ public class ClientBasic {
                                     System.out.println("Sent the read request...");
                                     String[] arr = new String[keys.size()];
                                     Map<String,String> read = co.readNValues(keys.toArray(arr));
+                                    //Need to print this out
                                 }
                             }
+                            case 3 ->{
+                                co.logout();
+                            }
+
                         }
                     }
                 } catch (IOException e) {
