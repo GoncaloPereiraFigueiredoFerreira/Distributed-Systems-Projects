@@ -1,5 +1,11 @@
 package org.example.chord;
 
+import org.example.ConsistentHash;
+import org.example.HashingAlgorithm;
+import org.example.chord.storage.DataStorage;
+import org.example.chord.storage.Version;
+
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 public class Node {
@@ -19,18 +25,20 @@ public class Node {
     private int nodeId;
     private final Finger[] fingerTable;
     private final int m;
+    private final DataStorage dataStorage;
     private Finger predecessor;
 
     public Boolean isMaster() {
         return master;
     }
 
-    public Node(Boolean master, int nodeId, String nodeAddress) {
+    public Node(Boolean master, int nodeId, String nodeAddress) throws NoSuchAlgorithmException {
         this.master = master;
         this.working=master; // not mistaken, if not master then it is not working on initialization
         this.nodeId = nodeId;
         this.nodeAddress = nodeAddress;
         this.predecessor = null;
+        this.dataStorage= new DataStorage(new HashingAlgorithm(1));
         this.m = 31;
         this.fingerTable = new Finger[m+1];
         for (int i = 1; i<=m; i++)
@@ -71,6 +79,16 @@ public class Node {
         return booleans;
     }
 
+    public void insertKey(String key, Version version){
+        this.dataStorage.insertKey(key,version);
+    }
+
+    public int getLastKeyVersion(String key) {
+        return this.dataStorage.getLastKeyVersion(key);
+    }
+    public Version getKey(String value,int version) {
+        return this.dataStorage.getKey(value,version);
+    }
     public Boolean stabilize() {
         boolean stable = true;
         Finger x;
@@ -99,6 +117,10 @@ public class Node {
         if (isInRange(id, nodeId, fingerTable[1].getId()))
             return new FingerSuccessorPair(fingerTable[1], true);
         return closestPrecedingNode(id);
+    }
+
+    public boolean isRightSuccessor(int id) {
+        return isInRange(id, predecessor.getId(), nodeId);
     }
 
     private FingerSuccessorPair closestPrecedingNode(int id) {

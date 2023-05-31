@@ -17,11 +17,11 @@ public class NodeRequests implements NodeRequestsInterface{
     public Finger findPredecessor(Finger node){
         Finger predecessor = null;
         try (ZContext context = new ZContext()) {
-            String message = "get_predecessor " + node.getId();
+            String message = "get_predecessor|" + node.getId();
 
             String replyString = sendDealer(context,identity,node.getAddress(),node.getId(),message);
 
-            String[] values = replyString.split("\\s+");
+            String[] values = replyString.split("\\|");
             if (values[0].equals("get_predecessor_response")) {
                 if(!Objects.equals(values[1], "null")) {
                     int predecessorId = Integer.parseInt(values[1]);
@@ -36,7 +36,7 @@ public class NodeRequests implements NodeRequestsInterface{
     @Override
     public void notifyRequest(Finger origin, Finger destiny) {
         try (ZContext context = new ZContext()) {
-            String message = "notify " + origin.getId() + " " + origin.getAddress();
+            String message = "notify|" + origin.getId() + "|" + origin.getAddress();
             sendDealerWAck(context,identity,destiny.getAddress(),destiny.getId(),message);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -68,11 +68,11 @@ public class NodeRequests implements NodeRequestsInterface{
             Integer nextNodeId = dest.getId();
 
             while (nextNodeAddress!=null) {
-                String message = "find_successor " + id;
+                String message = "find_successor|" + id;
 
                 String replyString = sendDealer(context,identity,nextNodeAddress,nextNodeId,message);
 
-                String[] values = replyString.split("\\s+");
+                String[] values = replyString.split("\\|");
 
                 if (values[0].equals("successor")) {
                     int successorId = Integer.parseInt(values[1]);
@@ -105,12 +105,12 @@ public class NodeRequests implements NodeRequestsInterface{
         poller.register(socket, ZMQ.Poller.POLLIN);
 
         while (true) {
-            socket.send(nodeId + " " + message, 0);
+            socket.send(nodeId + "|" + message, 0);
 
             if (poller.poll(TIMEOUT_MS) <= 0) {
                 // Timeout occurred, no reply received
-                context.destroySocket(socket);
-                return false;
+                //context.destroySocket(socket);
+                //return false;
             }
 
             if (poller.pollin(0)) {
@@ -132,7 +132,7 @@ public class NodeRequests implements NodeRequestsInterface{
         ZMQ.Socket socket = context.createSocket(SocketType.DEALER);
         socket.setIdentity(identity.getBytes(ZMQ.CHARSET));
         socket.connect(destiny);
-        socket.send(nodeId + " " + message, 0);
+        socket.send(nodeId + "|" + message, 0);
 
         ZMQ.Poller poller = context.createPoller(1);
         poller.register(socket, ZMQ.Poller.POLLIN);

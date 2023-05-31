@@ -1,6 +1,9 @@
 package org.example.chord;
 
-import org.example.DataStorage;
+import org.example.ConsistentHash;
+import org.example.HashingAlgorithm;
+import org.example.chord.storage.DataStorage;
+import org.example.chord.storage.Version;
 import org.zeromq.*;
 
 import java.security.NoSuchAlgorithmException;
@@ -10,16 +13,17 @@ public class NodeRunner implements Runnable {
     private final String startingNodeAddress;
     private Boolean isAddingNode;
     private final Integer defaultNode;
-    private DataStorage dataStorage;
     private final Map<Integer,Node> nodes;
+    private final HashingAlgorithm hashingAlgorithm;
     private final String nodeAddress;
     public NodeRunner(String address,String startingNodeAddress,Integer numberOfReplicas) throws NoSuchAlgorithmException {
         this.startingNodeAddress = startingNodeAddress;
         this.isAddingNode = false;
-        this.dataStorage = new DataStorage(1,numberOfReplicas);
         this.nodeAddress = address;
 
-        List<Integer> ids = dataStorage.addNode(address);
+        this.hashingAlgorithm = new HashingAlgorithm(1);
+        List<Integer> ids = generateReplicaIds(numberOfReplicas);
+
         defaultNode = ids.get(0);
         nodes = new HashMap<>();
         for (Integer nodeId:ids){
@@ -28,7 +32,14 @@ public class NodeRunner implements Runnable {
         }
     }
 
-
+    private List<Integer> generateReplicaIds(Integer numberOfReplicas){
+        List<Integer> ids = new ArrayList<>();
+        for (int i = 0; i <numberOfReplicas; i++) {
+            Integer key = hashingAlgorithm.hash(nodeAddress + i);
+            ids.add(key);
+        }
+        return ids;
+    }
     @Override
     public void run() {
         // Start the ZeroMQ REP socket to receive join requests
@@ -137,7 +148,7 @@ public class NodeRunner implements Runnable {
     }
 
     private String processMessage(String requestString) {
-        String[] values = requestString.split("\\s+");
+        String[] values = requestString.split("\\|");
         Integer wantedNode;
         if(Objects.equals(values[0], "null"))
             wantedNode=defaultNode;
@@ -157,7 +168,7 @@ public class NodeRunner implements Runnable {
                 int originNodeId = Integer.parseInt(values[1]);
 
                 FingerSuccessorPair successor = workingNode.findSuccessor(originNodeId);
-                return "successor " + successor.getFinger().getId() + " " + successor.isFound() + " "+ successor.getFinger().getAddress();
+                return "successor|" + successor.getFinger().getId() + "|" + successor.isFound() + "|"+ successor.getFinger().getAddress();
             }
             case "notify" -> {
                 System.out.println("Node address: "+ this.nodeAddress  + ":received notify");
@@ -186,9 +197,44 @@ public class NodeRunner implements Runnable {
             case "get_predecessor" -> {
                 Finger predecessor = workingNode.getPredecessor();
                 if(predecessor==null){
-                    return "get_predecessor_response null";
+                    return "get_predecessor_response|null";
                 }
-                else return "get_predecessor_response " + predecessor.getId() + " " + predecessor.getAddress();
+                else return "get_predecessor_response|" + predecessor.getId() + "|" + predecessor.getAddress();
+            }
+            case "insertKey" -> {
+                String key = values[1];
+                int hashValue = hashingAlgorithm.hash(key);
+                if(workingNode.isRightSuccessor(hashValue)) {
+                    workingNode.insertKey(values[1], Version.fromStrings(Arrays.copyOfRange(values, 2, values.length - 1)));
+                    return "ACK";
+                }
+                else{
+                    FingerSuccessorPair successor = workingNode.findSuccessor(hashValue);
+                    return "successor|" + successor.getFinger().getId() + "|"+ successor.getFinger().getAddress();
+                }
+            }
+            case "getLastKeyVersion" -> {
+                String key = values[1];
+                int hashValue = hashingAlgorithm.hash(key);
+                if(workingNode.isRightSuccessor(hashValue)) {
+                    return String.valueOf(workingNode.getLastKeyVersion(key));
+                }
+                else{
+                    FingerSuccessorPair successor = workingNode.findSuccessor(hashValue);
+                    return "successor|" + successor.getFinger().getId() + "|"+ successor.getFinger().getAddress();
+                }
+            }
+            case "getKey" -> {
+                String key = values[1];
+                int hashValue = hashingAlgorithm.hash(key);
+                if(workingNode.isRightSuccessor(hashValue)) {
+                    int version = Integer.parseInt(values[2]);
+                    return String.valueOf(workingNode.getKey(key,version));
+                }
+                else{
+                    FingerSuccessorPair successor = workingNode.findSuccessor(hashValue);
+                    return "successor|" + successor.getFinger().getId() + "|"+ successor.getFinger().getAddress();
+                }
             }
 
             default -> {
