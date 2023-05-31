@@ -2,6 +2,7 @@ package org.example.chord;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.AbstractMap;
 
 public class Node {
     @Override
@@ -76,8 +77,9 @@ public class Node {
             next=1;
         }
 
-        int result = (int) (nodeId + Math.pow(2, next - 1) % Math.pow(2, 31));
-        fingerTable[next] = nodeRequests.find_successor_request(result,myFinger());
+        int result = (int) ((nodeId + Math.pow(2, next - 1)) % Math.pow(2, 31));
+        Finger fingerResult = nodeRequests.find_successor_request(result,myFinger());
+        fingerTable[next] = fingerResult;
         return reset;
     }
 
@@ -89,7 +91,7 @@ public class Node {
         else {
             x = nodeRequests.findPredecessor(fingerTable[0]);
         }
-        if (x != null && isInRange(x.getId(), nodeId, fingerTable[0].getId())) {
+        if (x != null && (nodeId==fingerTable[0].getId() || isInRange(x.getId(), nodeId, fingerTable[0].getId()))) {
             fingerTable[0] = x; // Update current node's successor to be its predecessor
         }
         if(!Objects.equals(fingerTable[0], myFinger())) {
@@ -102,33 +104,35 @@ public class Node {
             predecessor=n;
     }
 
-
-    public Finger findSuccessor(int id) {
-        if(isInRange(id, nodeId, fingerTable[0].getId()))
-            return fingerTable[0];
+    public FingerSuccessorPair findSuccessor(int id) {
+        if (isInRange(id, nodeId, fingerTable[0].getId()))
+            return new FingerSuccessorPair(fingerTable[0], true);
         return closestPrecedingNode(id);
     }
 
-    private Finger closestPrecedingNode(int id) {
+    private FingerSuccessorPair closestPrecedingNode(int id) {
         if(m>1) {
-            for (int i = m; i >= 1; i--) {
-                if (isInRange(id, nodeId, fingerTable[i].getId()))
-                    return fingerTable[i];
+            for (int i = m; i >= 0; i--) {
+                if (isInRange(fingerTable[i].getId(), id,nodeId)){
+                    if(!fingerTable[i].equals(myFinger()))
+                        return new FingerSuccessorPair(fingerTable[i], false);
+                }
             }
         }
-        return myFinger();
+        return new FingerSuccessorPair(myFinger(), true);
     }
 
     private Finger myFinger(){
         return new Finger(nodeId,nodeAddress);
     }
 
-    private boolean isInRange(int value, int start, int end) {
-        // Implementation to check if value is within the range (start, end]
-        if (start < end) {
-            return value > start && value <= end;
+    public static boolean isInRange(int key, int a, int b) {
+        if (a > b) {
+            return a < key || b > key;
+        } else if (a < b) {
+            return a < key && b > key;
         } else {
-            return value > start || value <= end;
+            return a != key;
         }
     }
 }

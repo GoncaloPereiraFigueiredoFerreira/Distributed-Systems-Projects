@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Random;
 
 public class NodeRequests implements NodeRequestsInterface{
+    private static final long TIMEOUT_MS = 2000;
     private static Random rand = new Random(System.nanoTime());
     private final String identity = String.format(
             "%04X-%04X", rand.nextInt(), rand.nextInt()
@@ -75,9 +76,10 @@ public class NodeRequests implements NodeRequestsInterface{
 
                 if (values[0].equals("successor")) {
                     int successorId = Integer.parseInt(values[1]);
-                    String successorAddress = values[2];
+                    String stop = values[2];
+                    String successorAddress = values[3];
 
-                    if (Objects.equals(successorAddress, nextNodeAddress) && (nextNodeId==null || successorId == nextNodeId)) {
+                    if (Objects.equals(stop, "true")) {
                         successor = new Finger(successorId, successorAddress);
                         nextNodeAddress = null;
                     } else { //Missed
@@ -92,34 +94,59 @@ public class NodeRequests implements NodeRequestsInterface{
         return successor;
     }
 
-    private void sendDealerWAck(ZContext context,String identity, String destiny,Integer nodeId, String message) throws InterruptedException {
+    private static boolean sendDealerWAck(ZContext context, String identity, String destiny, Integer nodeId, String message) throws InterruptedException {
         String replyString = "";
 
         ZMQ.Socket socket = context.createSocket(SocketType.DEALER);
         socket.setIdentity(identity.getBytes(ZMQ.CHARSET));
         socket.connect(destiny);
 
+        ZMQ.Poller poller = context.createPoller(1);
+        poller.register(socket, ZMQ.Poller.POLLIN);
+
         while (true) {
-            socket.send(nodeId+" "+message, 0);
-            byte[] reply = socket.recv(0);
-            replyString = new String(reply, ZMQ.CHARSET);
-            if(!replyString.equals("ACK")){
-                Thread.sleep(100);
+            socket.send(nodeId + " " + message, 0);
+
+            if (poller.poll(TIMEOUT_MS) <= 0) {
+                // Timeout occurred, no reply received
+                context.destroySocket(socket);
+                return false;
             }
-            else break;
+
+            if (poller.pollin(0)) {
+                byte[] reply = socket.recv(0);
+                replyString = new String(reply, ZMQ.CHARSET);
+                if (!replyString.equals("ACK")) {
+                    Thread.sleep(100);  // Wait for a short interval before resending
+                } else {
+                    break;  // Received ACK, exit the loop
+                }
+            }
         }
+
         context.destroySocket(socket);
+        return true;
     }
 
-    private String sendDealer(ZContext context,String identity, String destiny,Integer nodeId, String message){
+    private static String sendDealer(ZContext context, String identity, String destiny, Integer nodeId, String message) {
         ZMQ.Socket socket = context.createSocket(SocketType.DEALER);
         socket.setIdentity(identity.getBytes(ZMQ.CHARSET));
         socket.connect(destiny);
-        socket.send(nodeId+" "+message, 0);
+        socket.send(nodeId + " " + message, 0);
 
-        byte[] reply = socket.recv(0);
+        ZMQ.Poller poller = context.createPoller(1);
+        poller.register(socket, ZMQ.Poller.POLLIN);
 
+        if (poller.poll(TIMEOUT_MS) <= 0) {
+            // Timeout occurred, no reply received
+            context.destroySocket(socket);
+        }
+        if (poller.pollin(0)) {
+            byte[] reply = socket.recv(0);
+            context.destroySocket(socket);
+            return new String(reply, ZMQ.CHARSET);
+        }
         context.destroySocket(socket);
-        return  new String(reply, ZMQ.CHARSET);
+        return "";
     }
 }

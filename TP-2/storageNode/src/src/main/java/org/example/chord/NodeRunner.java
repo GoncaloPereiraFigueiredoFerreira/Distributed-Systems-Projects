@@ -36,19 +36,18 @@ public class NodeRunner implements Runnable {
             ZMQ.Socket frontend = context.createSocket(SocketType.ROUTER);
             frontend.bind(nodeAddress);
 
-
-            for (Node node:nodes.values()) {
-                if (!node.isMaster()) {
-                    Thread newThread = new Thread(() -> {
+            Thread newThread = new Thread(() -> {
+                for (Node node : nodes.values()) {
+                    if (!node.isMaster()) {
                         node.joinRing(startingNodeAddress);
-                    });
-                    newThread.start();
+                    }
                 }
-            }
+            });
+            newThread.start();
 
             Thread periodicCounter = new Thread(() -> {
                 try {
-                    periodicStabilization(1000);
+                    periodicStabilization(100);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -73,17 +72,18 @@ public class NodeRunner implements Runnable {
     public void periodicStabilization(long duration) throws InterruptedException {
         while (true){
             Thread.sleep(duration);
-            for (Node n:nodes.values())
+            for (Node n:nodes.values()) //TODO bottleneck se tiver muitas replicas
                 if (n.isWorking())
                     n.stabilize();
         }
     }
 
     public void periodicFingerFix(long duration) throws InterruptedException {
-        Integer next = 1;
+        int next = 1;
         while (true){
             Thread.sleep(duration);
-            Boolean reset = false;
+            System.out.println("Fix finger");
+            boolean reset = false;
             for (Node n:nodes.values())
                 if (n.isWorking())
                     reset = n.fix_Fingers(next);
@@ -134,8 +134,8 @@ public class NodeRunner implements Runnable {
                 System.out.println("Node address: "+ this.nodeAddress  + ":received find_successor");
                 int originNodeId = Integer.parseInt(values[1]);
 
-                Finger successor = workingNode.findSuccessor(originNodeId);
-                return "successor " + successor.getId() + " " + successor.getAddress();
+                FingerSuccessorPair successor = workingNode.findSuccessor(originNodeId);
+                return "successor " + successor.getFinger().getId() + " " + successor.isFound() + " "+ successor.getFinger().getAddress();
             }
             case "notify" -> {
                 System.out.println("Node address: "+ this.nodeAddress  + ":received notify");
