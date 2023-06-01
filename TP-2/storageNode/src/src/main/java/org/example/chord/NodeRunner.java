@@ -175,8 +175,8 @@ public class NodeRunner implements Runnable {
                 int originNodeId = Integer.parseInt(values[1]);
                 String originNodeAddress = values[2];
 
-                workingNode.notify(new Finger(originNodeId,originNodeAddress));
-                return "ACK";
+                Map<String,List<Version>> keysToSend = workingNode.notify(new Finger(originNodeId,originNodeAddress));
+                return DataStorage.keysToString(keysToSend);
             }
             case "add_node" -> {
                 System.out.println("Node address: "+ this.nodeAddress  + ":received add_node");
@@ -205,7 +205,7 @@ public class NodeRunner implements Runnable {
                 String key = values[1];
                 int hashValue = hashingAlgorithm.hash(key);
                 if(workingNode.isRightSuccessor(hashValue)) {
-                    workingNode.insertKey(values[1], Version.fromStrings(Arrays.copyOfRange(values, 2, values.length - 1)));
+                    workingNode.insertKey(values[1], Version.fromStrings(Arrays.copyOfRange(values, 2, values.length)));
                     return "ACK";
                 }
                 else{

@@ -34,12 +34,10 @@ public class NodeRequests implements NodeRequestsInterface{
     }
 
     @Override
-    public void notifyRequest(Finger origin, Finger destiny) {
+    public String notifyRequest(Finger origin, Finger destiny) {
         try (ZContext context = new ZContext()) {
             String message = "notify|" + origin.getId() + "|" + origin.getAddress();
-            sendDealerWAck(context,identity,destiny.getAddress(),destiny.getId(),message);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            return sendDealer(context,identity,destiny.getAddress(),destiny.getId(),message);
         }
     }
 

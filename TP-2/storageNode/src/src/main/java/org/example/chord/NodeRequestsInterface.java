@@ -6,5 +6,5 @@ public interface NodeRequestsInterface {
     Finger find_successor_request(Integer id,Finger dest);
     Finger findPredecessor(Finger node);
 
-    void notifyRequest(Finger origin,Finger destiny);
+    String notifyRequest(Finger origin,Finger destiny);
 }

@@ -5,6 +5,7 @@ import org.example.HashingAlgorithm;
 import org.example.chord.storage.DataStorage;
 import org.example.chord.storage.Version;
 
+import javax.xml.crypto.Data;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
@@ -103,14 +104,15 @@ public class Node {
             stable=false;
         }
         if(!Objects.equals(fingerTable[1], myFinger())) {
-            nodeRequests.notifyRequest(myFinger(), fingerTable[1]);
+            dataStorage.insertFromString(nodeRequests.notifyRequest(myFinger(), fingerTable[1])); //Addition suss
         }
         return stable;
     }
 
-    public void notify(Finger n){
+    public Map<String,List<Version>> notify(Finger n){
         if(predecessor==null || isInRange(n.getId(), predecessor.getId(), nodeId))
             predecessor=n;
+        return dataStorage.moveKeys(n.getId()); //TODO suss?
     }
 
     public FingerSuccessorPair findSuccessor(int id) {
@@ -119,7 +121,9 @@ public class Node {
         return closestPrecedingNode(id);
     }
 
-    public boolean isRightSuccessor(int id) {
+    public boolean isRightSuccessor(int id) { //TODO suss?
+        if(predecessor==null)
+            return true; //TODO Might be wrong
         return isInRange(id, predecessor.getId(), nodeId);
     }
 

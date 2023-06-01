@@ -18,7 +18,11 @@ public class DataStorage {
         this.map = new HashMap<>();
     }
 
-    public void insertKey(List<Dependencie> dependencies,String key, String value){
+    public Map<String, List<Version>> getMap() {
+        return map;
+    }
+
+    public void insertKey(List<Dependencie> dependencies, String key, String value){
         try {
             readWriteLock.writeLock().lock();
             Version newVersion = new Version(dependencies,value);
@@ -85,6 +89,45 @@ public class DataStorage {
         }
         finally {
             readWriteLock.readLock().unlock();
+        }
+    }
+
+    public Map<String,List<Version>> moveKeys(int id) {
+        try {
+            readWriteLock.writeLock().lock();
+            Map<String,List<Version>> keysToChange = new HashMap<>();
+            for(Map.Entry<String,List<Version>> entry:map.entrySet()){
+                if(hashingAlgorithm.hash(entry.getKey())<=id){
+                    keysToChange.put(entry.getKey(),entry.getValue());
+                    map.remove(entry.getKey());
+                }
+            }
+            return keysToChange;
+        }finally {
+            readWriteLock.writeLock().unlock();
+        }
+    }
+
+    public static String keysToString(Map<String,List<Version>> map) {
+        StringBuilder stringBuilder = new StringBuilder();
+        map.forEach((key, value) -> {
+            stringBuilder.append(key).append("||");
+            value.forEach(version -> stringBuilder.append(version.toString()).append("||"));
+            stringBuilder.append("|");
+        });
+        return stringBuilder.toString();
+    }
+    public void insertFromString(String value){
+        //"key1||version||version|||key2||version|||"
+        if(!Objects.equals(value, "")) {
+            String[] keySets = value.split("\\|{3}");
+            for (String entry : keySets) {
+                String[] vals = entry.split("\\|{2}");
+                String key = vals[0];
+                List<Version> versions = Arrays.stream(Arrays.copyOfRange(vals, 1, vals.length))
+                        .map(e -> Version.fromStrings(e.split("\\|"))).toList();
+                map.put(key, versions);
+            }
         }
     }
 }
