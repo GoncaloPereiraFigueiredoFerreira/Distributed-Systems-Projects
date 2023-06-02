@@ -9,6 +9,7 @@ public class ClientBasic {
     public static void main(String[] args){
         InputMenu login = new InputMenu("Please specify your login name","Username");
         String[] sessionServers = new String[]{"Server1","Server2","Server3"};
+        InetSocketAddress[] sessionServersAddress = new InetSocketAddress[]{new InetSocketAddress("0.0.0.0",5555),new InetSocketAddress("0.0.0.0",5556),new InetSocketAddress("0.0.0.0",5557)};
         Menu chooseSession = new Menu("Please specify to which server do you wish to connect:",sessionServers);
         String[] actions = new String[]{"Write a key-value", "Read values", "Logout"};
         Menu chooseAction = new Menu("Choose an action",actions);
@@ -21,7 +22,7 @@ public class ClientBasic {
             chooseSession.executa();
             if (chooseSession.getOption() != 0){
                 try {
-                    ClientOperations co = new ClientOperations(null);
+                    ClientOperations co = new ClientOperations(sessionServersAddress[chooseSession.getOption()]);
                     co.login(user);
                     while(chooseAction.getOption()!=-1 && chooseAction.getOption() != 3 ) {
                         chooseAction.executa();

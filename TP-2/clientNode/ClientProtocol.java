@@ -6,34 +6,37 @@ import java.util.Map;
 public class ClientProtocol {
     public static byte[] serializeLogin(String username) {
         ByteBuffer bf = ByteBuffer.allocate(200);
-        bf.putChar('l').putChar('i').putChar('|');
+        bf.put("li|".getBytes(StandardCharsets.UTF_8));
         bf.put(username.getBytes(StandardCharsets.UTF_8));
+        bf.putChar('\n');
         bf.flip();
         return bf.array();
     }
     public static byte[] serializeLogout() {
         ByteBuffer bf = ByteBuffer.allocate(4);
-        bf.putChar('l').putChar('i');
+        bf.put("lo\n".getBytes(StandardCharsets.UTF_8));
         bf.flip();
         return bf.array();
     }
     public static byte[] serializeWrites(String key,String value){
         ByteBuffer bf = ByteBuffer.allocate(200);
-        bf.putChar('w').putChar('|');
+        bf.put("w|".getBytes(StandardCharsets.UTF_8));
         bf.put(key.getBytes(StandardCharsets.UTF_8));
-        bf.putChar('|');
+        bf.put("|".getBytes(StandardCharsets.UTF_8));
         bf.put(value.getBytes(StandardCharsets.UTF_8));
+        bf.putChar('\n');
         bf.flip();
         return bf.array();
     }
 
     public static byte[] serializeNReads(String[] keys){
         ByteBuffer bf = ByteBuffer.allocate(200);
-        bf.putChar('r');
+        bf.put("r".getBytes(StandardCharsets.UTF_8));
         for (int i =0; i<keys.length;i++){
-            bf.putChar('|');
+            bf.put("|".getBytes(StandardCharsets.UTF_8));
             bf.put(keys[i].getBytes(StandardCharsets.UTF_8));
         }
+        bf.putChar('\n');
         return bf.array();
     }
     public static boolean deserializeGeneralResponse(byte[] response){
