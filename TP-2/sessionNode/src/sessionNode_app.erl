@@ -7,7 +7,7 @@
 
 -behaviour(application).
 
--export([start/2, stop/1,split/2]).
+-export([start/2, stop/1, main/1]).
 
 -define(TIME, 60).
 -define(UPDATE, 1).
@@ -16,6 +16,7 @@
 
 
 start(_StartType, _StartArgs) ->
+    sessionManager:start(),
     sessionNode_sup:start_link(),
     main(5555).
 
@@ -25,8 +26,8 @@ stop(_State) ->
 main(Port) ->
     io:format("Sessao na porta ~p~n",[Port]),
     {ok, LSock} = gen_tcp:listen(Port, [{active, once}, {packet, line},{reuseaddr, true}]),
-    Session = spawn(fun() -> session(#{},orSet:new(),orSet:new()) end),
-    %Manager ! {enter,Session},
+    Session = spawn(fun() -> session(#{},orSet:new(),orSet:new(),[]) end),
+    sessionManager:add_session(Session),
     spawn(fun() -> acceptor(LSock, Session) end),
     timer(?UPDATE,Session),
     ok.
@@ -64,27 +65,28 @@ login(Sock) ->
 
 % responsabilidade de retirar um cliente do ban e da sessao que o baniu 
 
-session(Users,All_users,Ban_user) ->
+session(Users,All_users,Ban_user,Sessions) ->
     receive
         {sessions,Sessions} ->
-            io:format("Sessions: ~p~n",[Sessions]),
-            session(Users,All_users,Ban_user);
+            io:format("Sessions: ~p~n",[lists:delete(self(),Sessions)]),
+            session(Users,All_users,Ban_user,lists:delete(self(),Sessions));
         {request,Pid,T} ->
             {Nome,Trortled,{Num,L,Mean}} = maps:get(Pid,Users),
                 case {Trortled,Num} of
                     {false,Num} ->  
                         Pid ! {resp,"ok"},
-                        session(maps:put(Pid,{Nome,false,{Num + 1,L,Mean}},Users),All_users,Ban_user);
+                        Map = maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users);
                     {{true,_,_},Num} when Num < ?MAX_MESSAGE ->
                         Pid ! {resp,"ok"},
-                        session(maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users),All_users,Ban_user);
+                        Map = maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users);
                     {true,Num} when Num < ?MAX_MESSAGE ->
                         Pid ! {resp,"ok"},
-                        session(maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users),All_users,Ban_user);
+                        Map = maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users);
                     {_,_} ->
                         Pid ! {resp,"false"},
-                        session(maps:put(Pid,{Nome,Trortled,{Num,L,Mean}},Users),All_users,Ban_user)
-                end;
+                        Map = maps:put(Pid,{Nome,Trortled,{Num,L,Mean}},Users)
+                end,
+                session(maps:put(Map),All_users,Ban_user,Sessions);
             
         {timer} ->
             {{Ban_user1,Delta},Users1} = 
@@ -108,17 +110,20 @@ session(Users,All_users,Ban_user) ->
                         same -> {{Acc_ban,Acc_ban_delta},maps:put(Key,S,Acc_user)}
                     end 
                 end,{{Ban_user,orSet:new()},#{}},Users),
-            io:format("Dic timer ~p ~nBan Users: ~p~nDelta: ~p~n",[Users1,orSet:elements(Ban_user1),Delta]),
-            session(Users1,All_users,Ban_user1);
+            %io:format("Dic timer ~p ~nBan Users: ~p~nDelta: ~p~n",[Users1,orSet:elements(Ban_user1),Delta]),
+            [Pid_s ! {ban_state,Delta} || Pid_s <- Sessions],
+            session(Users1,All_users,Ban_user1,Sessions);
         {login, Pid, Name} ->
             case orSet:is_element(Name,Ban_user) of
                 true ->
-                    {All_users1,Delta} = orSet:add(Name,self(),All_users), 
-                    session(maps:put(Pid,{Name,true,{0,[],0}},Users),All_users1,Ban_user);
+                    {All_users1,Delta} = orSet:add(Name,self(),All_users),
+                    Map = maps:put(Pid,{Name,true,{0,[],0}},Users); 
                 false -> 
-                    {All_users1,Delta} = orSet:add(Name,self(),All_users), 
-                    session(maps:put(Pid,{Name,false,{0,[],0}},Users),All_users1,Ban_user)
-            end;
+                    {All_users1,Delta} = orSet:add(Name,self(),All_users),
+                    Map = maps:put(Pid,{Name,false,{0,[],0}},Users)
+            end,
+            [Pid_s ! {user_state,Delta} || Pid_s <- Sessions],
+            session(Map,All_users1,Ban_user,Sessions);
             
         {leave, Pid} ->
             io:format("Leave Dic: ~p~n",[Users]),
@@ -128,7 +133,14 @@ session(Users,All_users,Ban_user) ->
                 {true,Time,_} -> New_users = maps:put(Pid,{Name,{true,Time,false},S},Users);
                 _ -> New_users = maps:remove(Pid,Users) 
             end,
-            session(New_users,All_users1,Ban_user)
+            [Pid_s ! {user_state,Delta} || Pid_s <- Sessions],
+            session(New_users,All_users1,Ban_user,Sessions);
+        {user_state, Delta} ->
+            All_users1 = orSet:join(Delta,All_users),
+            session(Users,All_users1,Ban_user,Sessions);
+        {ban_state, Delta} -> 
+            Ban_user1 = orSet:join(Delta,Ban_user),
+            session(Users,All_users,Ban_user1,Sessions)
     end.
 
 update_request({Nome,T,{Num,List,_}},Ban_user) ->
