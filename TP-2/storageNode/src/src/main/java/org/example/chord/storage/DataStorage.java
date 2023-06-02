@@ -12,10 +12,12 @@ public class DataStorage {
     private final Map<String,List<Version>> map;
     private final HashingAlgorithm hashingAlgorithm;
     ReadWriteLock readWriteLock;
-    public DataStorage(HashingAlgorithm hashingAlgorithm){
+    int nodeId;
+    public DataStorage(HashingAlgorithm hashingAlgorithm,int nodeId){
         this.hashingAlgorithm = hashingAlgorithm;
         this.readWriteLock = new ReentrantReadWriteLock();
         this.map = new HashMap<>();
+        this.nodeId=nodeId;
     }
 
     public Map<String, List<Version>> getMap() {
@@ -97,7 +99,7 @@ public class DataStorage {
             readWriteLock.writeLock().lock();
             Map<String,List<Version>> keysToChange = new HashMap<>();
             for(Map.Entry<String,List<Version>> entry:map.entrySet()){
-                if(hashingAlgorithm.hash(entry.getKey())<=id){
+                if(isInRange(id,hashingAlgorithm.hash(entry.getKey()),nodeId)){
                     keysToChange.put(entry.getKey(),entry.getValue());
                     map.remove(entry.getKey());
                 }
@@ -128,6 +130,16 @@ public class DataStorage {
                         .map(e -> Version.fromStrings(e.split("\\|"))).toList();
                 map.put(key, versions);
             }
+        }
+    }
+
+    public static boolean isInRange(int key, int a, int b) {
+        if (a > b) {
+            return a < key || b > key;
+        } else if (a < b) {
+            return a < key && b > key;
+        } else {
+            return a != key;
         }
     }
 }

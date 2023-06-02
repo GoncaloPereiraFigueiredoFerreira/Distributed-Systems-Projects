@@ -13,14 +13,12 @@ public class NodeRunner implements Runnable {
     private final String startingNodeAddress;
     private final String loadBalancerAddress;
     private final Boolean firstExecution;
-    private Boolean isAddingNode;
     private final Integer defaultNode;
     private final Map<Integer,Node> nodes;
     private final HashingAlgorithm hashingAlgorithm;
     private final String nodeAddress;
     public NodeRunner(Boolean firstExecution,String address,String startingNodeAddress,List<Integer> ids,String loadBalancerAddress) throws NoSuchAlgorithmException {
         this.startingNodeAddress = startingNodeAddress;
-        this.isAddingNode = false;
         this.nodeAddress = address;
         this.loadBalancerAddress = loadBalancerAddress;
         this.firstExecution = firstExecution;
@@ -29,7 +27,8 @@ public class NodeRunner implements Runnable {
         defaultNode = ids.get(0);
         nodes = new HashMap<>();
         for (Integer nodeId:ids){
-            nodes.put(nodeId,new Node(nodeId,address));
+            Boolean isFirst = (firstExecution&& Objects.equals(defaultNode, nodeId));
+            nodes.put(nodeId,new Node(nodeId,address,isFirst));
         }
     }
     @Override

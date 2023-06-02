@@ -14,6 +14,13 @@ public class LoadBalancer implements Runnable{
     String loadBalancerAddress;
 
     private HashingAlgorithm hashingAlgorithm;
+    private int nExtraStartingNodes;
+    private int nReplicas;
+
+    public LoadBalancer(int nExtraStartingNodes,int nReplicas){
+        this.nExtraStartingNodes=nExtraStartingNodes;
+        this.nReplicas=nReplicas;
+    }
     @Override
     public void run() {
         basePort = 5555;
@@ -25,7 +32,7 @@ public class LoadBalancer implements Runnable{
         }
 
         startChordNode(true);
-        for (int i = 0; i < 9; i++) {
+        for (int i = 0; i < nExtraStartingNodes; i++) {
             startChordNode(false);
         }
 
@@ -48,7 +55,7 @@ public class LoadBalancer implements Runnable{
         msg.destroy();
 
         String[] values = new String(content.getData(), ZMQ.CHARSET).split("\\|");
-        if(Objects.equals(values[0], ""))
+        if(Objects.equals(values[0], "")||Objects.equals(values[0], "null"))
             values = Arrays.copyOfRange(values, 1, values.length);
         String returnMessage = processMessageContent(values);
         ZFrame newContent;
@@ -87,7 +94,7 @@ public class LoadBalancer implements Runnable{
     }
     public void startChordNode(Boolean firstExecution)  {
         String address = "tcp://localhost:" + basePort;
-        List<Integer> ids = generateReplicaIds(address,5);
+        List<Integer> ids = generateReplicaIds(address,firstExecution);
         Thread thread;
         try {
             thread = new Thread(new NodeRunner(firstExecution,address, "tcp://localhost:5555",ids,loadBalancerAddress));
@@ -95,20 +102,22 @@ public class LoadBalancer implements Runnable{
             throw new RuntimeException(e);
         }
         thread.start();
-        addingNodes.addAll(ids);
 
         basePort+=4;
     }
 
-    private List<Integer> generateReplicaIds(String address,int numberOfReplicas){
+    private List<Integer> generateReplicaIds(String address,Boolean firstExecution){
         List<Integer> ids = new ArrayList<>();
-        for (int i = 0; i <numberOfReplicas; i++) {
+        for (int i = 0; i <nReplicas; i++) {
             Integer key = hashingAlgorithm.hash(address + i);
             while (allIds.contains(key)){
                 key = hashingAlgorithm.hash(address + i + counter++);
             }
+
             ids.add(key);
             allIds.add(key);
+            if(!(firstExecution&&i==0))
+                addingNodes.add(key);
         }
         return ids;
     }

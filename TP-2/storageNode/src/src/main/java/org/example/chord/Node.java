@@ -28,12 +28,12 @@ public class Node {
     private final DataStorage dataStorage;
     private Finger predecessor;
 
-    public Node(int nodeId, String nodeAddress) throws NoSuchAlgorithmException {
-        this.working=false; // not mistaken, if not master then it is not working on initialization
+    public Node(int nodeId, String nodeAddress,Boolean isFirst) throws NoSuchAlgorithmException {
+        this.working=isFirst; // not mistaken, if not master then it is not working on initialization
         this.nodeId = nodeId;
         this.nodeAddress = nodeAddress;
         this.predecessor = null;
-        this.dataStorage= new DataStorage(new HashingAlgorithm(1));
+        this.dataStorage= new DataStorage(new HashingAlgorithm(1),nodeId);
         this.m = 31;
         this.fingerTable = new Finger[m+1];
         for (int i = 1; i<=m; i++)

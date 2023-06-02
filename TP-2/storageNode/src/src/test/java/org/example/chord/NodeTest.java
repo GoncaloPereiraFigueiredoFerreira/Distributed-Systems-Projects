@@ -21,21 +21,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class NodeTest {
     @Test
-    void startChord() throws NoSuchAlgorithmException {
-        LoadBalancer loadBalancer = new LoadBalancer();
+    void startChord() {
+        LoadBalancer loadBalancer = new LoadBalancer(0,1);
         loadBalancer.run();
-        /*
-        for (int i=0;i<10;i++){
-            int basePort = 5555;
-            Thread thread = new Thread(new NodeRunner("tcp://localhost:"+(basePort+i*4),"tcp://localhost:5555",5));
-            thread.start();
-        }
-
-        NodeRunner test = new NodeRunner("tcp://localhost:5562","tcp://localhost:5555",1);
-        test.run();
-        // Print the successor of each node
-        //System.out.println("Node 2 successor: " + node2.getSuccessor());
-       // System.out.println("Node 3 successor: " + node3.getSuccessor());*/
     }
 
     @Test
@@ -46,14 +34,27 @@ class NodeTest {
         );
         //insertKey
         try (ZContext context = new ZContext()) {
+            //System.out.println(sendDealer(context, identity,"tcp://localhost:5555",null,"insertKey|key|key1|0|key2|1|value"));
+            System.out.println(sendDealer(context, identity,"tcp://localhost:5559",1731348717,"getKey|key|3"));
+        }
+    }
+
+    @Test
+    void addNode() {
+        Random rand = new Random(System.nanoTime());
+        String identity = String.format(
+                "%04X-%04X", rand.nextInt(), rand.nextInt()
+        );
+        //insertKey
+        try (ZContext context = new ZContext()) {
             //System.out.println(sendDealer(context, identity,"tcp://localhost:5555",400210732,"insertKey|key|key1|0|key2|1|value"));
-            System.out.println(sendDealer(context, identity,"tcp://localhost:5555",400210732,"getKey|key|1"));
+            System.out.println(sendDealer(context, identity,"tcp://localhost:5550",null,"add_node"));
         }
     }
 
     @Test
     void dataStorageTest() throws NoSuchAlgorithmException {
-        DataStorage dataStorage = new DataStorage(new HashingAlgorithm(1));
+        DataStorage dataStorage = new DataStorage(new HashingAlgorithm(1),0);
         List<Dependencie> dependencies = new ArrayList<>();
         dataStorage.insertKey(dependencies,"key","v1");
         dataStorage.insertKey(dependencies,"key","v2");
@@ -80,6 +81,7 @@ class NodeTest {
         if (poller.poll(1000) <= 0) {
             // Timeout occurred, no reply received
             context.destroySocket(socket);
+            return "Error";
         }
         if (poller.pollin(0)) {
             byte[] reply = socket.recv(0);
