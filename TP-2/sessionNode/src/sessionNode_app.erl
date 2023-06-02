@@ -26,14 +26,14 @@ main(Port) ->
     io:format("Sessao na porta ~p~n",[Port]),
     {ok, LSock} = gen_tcp:listen(Port, [{active, once}, {packet, line},{reuseaddr, true}]),
     Session = spawn(fun() -> session(#{},orSet:new(),orSet:new()) end),
-    spawn(fun() -> timer(?UPDATE,Session) end),
     %Manager ! {enter,Session},
-    acceptor(LSock, Session),
+    spawn(fun() -> acceptor(LSock, Session) end),
+    timer(?UPDATE,Session),
     ok.
 
 timer(Time,Pid) ->
     receive
-        after Time * 1000 ->
+        after round(Time * 1000) ->
             Pid ! {timer},
             timer(Time,Pid)
     end.
@@ -57,7 +57,7 @@ login(Sock) ->
 
 % Estado interno a cada sessao
 % Users = map Pid -> {Name,Thortled,{Num de pedidos no ultimo intervalo,lista de num de pedidos por intervalo, numero total de pedidos(sum da lista)}}
-% Thortled = false or {true,time_remaning}
+% Thortled = false or {true,time_remaning,is_logged} or true (caso estaja banido por outro sesrvidor de sessao)
 
 % All_users = orSet de para saber o numero total de useres para efetuar o castigo do thortle
 % Ban_user = orSet com todos os users que foram banidos no sistema para que ao trocar de sessao continuem banidos
@@ -75,7 +75,10 @@ session(Users,All_users,Ban_user) ->
                     {false,Num} ->  
                         Pid ! {resp,"ok"},
                         session(maps:put(Pid,{Nome,false,{Num + 1,L,Mean}},Users),All_users,Ban_user);
-                    {{true,_},Num} when Num < ?MAX_MESSAGE ->
+                    {{true,_,_},Num} when Num < ?MAX_MESSAGE ->
+                        Pid ! {resp,"ok"},
+                        session(maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users),All_users,Ban_user);
+                    {true,Num} when Num < ?MAX_MESSAGE ->
                         Pid ! {resp,"ok"},
                         session(maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users),All_users,Ban_user);
                     {_,_} ->
@@ -86,42 +89,67 @@ session(Users,All_users,Ban_user) ->
         {timer} ->
             {{Ban_user1,Delta},Users1} = 
                 maps:fold(fun(Key,Value,{{Acc_ban,Acc_ban_delta},Acc_user}) -> 
-                    {B,S} = update_request(Value),
+                    case Value of
+                        {Nome,{_,_,Logged},_} -> Logged = Logged,Nome = Nome;
+                        {Nome,Logged,_} -> Logged = Logged,Nome = Nome
+                    end,
+                    {B,S} = update_request(Value,Ban_user),
                     case B of
                         add -> 
-                            {New_ban,New_delta} = orSet:add(Key,self(),Acc_ban),
+                            {New_ban,New_delta} = orSet:add(Nome,self(),Acc_ban),
                             {{orSet:join(Acc_ban,New_ban),orSet:join(Acc_ban_delta,New_delta)},maps:put(Key,S,Acc_user)};
                         remove -> 
-                            {New_ban,New_delta} = orSet:remove(Key,Acc_ban),
-                            {{orSet:join(Acc_ban,New_ban),orSet:join(Acc_ban_delta,New_delta)},maps:put(Key,S,Acc_user)};
+                            {New_ban,New_delta} = orSet:remove(Nome,Acc_ban),
+                            Ret = {orSet:join(Acc_ban,New_ban),orSet:join(Acc_ban_delta,New_delta)},
+                            case Logged of %remove utilizadores do mapa que tenham sido banidos mas não estejam no loged in
+                                true -> {Ret,maps:put(Key,S,Acc_user)};
+                                false -> {Ret,Acc_user}
+                            end;
                         same -> {{Acc_ban,Acc_ban_delta},maps:put(Key,S,Acc_user)}
                     end 
                 end,{{Ban_user,orSet:new()},#{}},Users),
             io:format("Dic timer ~p ~nBan Users: ~p~nDelta: ~p~n",[Users1,orSet:elements(Ban_user1),Delta]),
             session(Users1,All_users,Ban_user1);
         {login, Pid, Name} ->
-            {All_users1,Delta} = orSet:add(Name,self(),All_users), 
-            session(maps:put(Pid,{Name,false,{0,[],0}},Users),All_users1,Ban_user);
+            case orSet:is_element(Name,Ban_user) of
+                true ->
+                    {All_users1,Delta} = orSet:add(Name,self(),All_users), 
+                    session(maps:put(Pid,{Name,true,{0,[],0}},Users),All_users1,Ban_user);
+                false -> 
+                    {All_users1,Delta} = orSet:add(Name,self(),All_users), 
+                    session(maps:put(Pid,{Name,false,{0,[],0}},Users),All_users1,Ban_user)
+            end;
+            
         {leave, Pid} ->
-            {Name,_,_} = maps:get(Pid,Users),
+            io:format("Leave Dic: ~p~n",[Users]),
+            {Name,T,S} = maps:get(Pid,Users),
             {All_users1,Delta} = orSet:remove(Name,All_users),
-            session(maps:remove(Pid,Users),All_users1,Ban_user)
+            case T of % caso o Pid esteja banido nao elemina a entrada ate o ban desaparecer
+                {true,Time,_} -> New_users = maps:put(Pid,{Name,{true,Time,false},S},Users);
+                _ -> New_users = maps:remove(Pid,Users) 
+            end,
+            session(New_users,All_users1,Ban_user)
     end.
 
-update_request({Nome,T,{Num,List,_}}) ->
-    Intervale = ?TIME div ?UPDATE,
-    ListR = update_request([Num|List],Intervale), 
-    case {T,lists:sum(ListR)/60} of
-        {false,N} when N > ?LIMIT -> {add,{Nome,{true,60},{0,ListR,N}}};
+update_request({Nome,T,{Num,List,_}},Ban_user) ->
+    Intervale = round(?TIME / ?UPDATE),
+    ListR = update_request_ban_state([Num|List],Intervale), 
+    case {T,lists:sum(ListR)/?TIME} of
+        {false,N} when N > ?LIMIT -> {add,{Nome,{true,60,true},{0,ListR,N}}};
         {false,N} -> {same,{Nome,T,{0,ListR,N}}};
-        {{true,Time},N} when Time > ?UPDATE -> {same,{Nome,{true,Time-?UPDATE},{0,ListR,N}}};
-        {{true,_},N} -> {remove,{Nome,false,{0,ListR,N}}}
+        {{true,Time,Logged},N} when Time > ?UPDATE -> {same,{Nome,{true,Time-?UPDATE,Logged},{0,ListR,N}}};
+        {{true,_,_},N} -> {remove,{Nome,false,{0,ListR,N}}};
+        {true,N} ->
+            case orSet:is_element(Nome,Ban_user) of
+                true -> {same,{Nome,T,{0,ListR,N}}};
+                false -> {same,{Nome,false,{0,ListR,N}}} 
+            end  
     end.
 
 
-update_request([H|_],0) -> [H];
-update_request([H|T],Num) -> [H|update_request(T,Num-1)];
-update_request([],_) -> [].
+update_request_ban_state([H|_],0) -> [H];
+update_request_ban_state([H|T],Num) -> [H|update_request_ban_state(T,Num-1)];
+update_request_ban_state([],_) -> [].
 
 user(Sock,Session) -> 
     receive
@@ -131,28 +159,35 @@ user(Sock,Session) ->
         {tcp,_,Data} ->
             inet:setopts(Sock, [{active, once}]),
             Parsed_data = parse_data(Data),
-            io:format("Parsed: ~p~n",[Parsed_data]),
-            Session ! proc_data(Parsed_data),
-            user(Sock,Session);
-        {tcp_close,_} ->
+            %io:format("Parsed: ~p~n",[Parsed_data]),
+            Send_data = proc_data(Parsed_data), 
+            Session ! Send_data,
+            case Send_data of %caso seja uma mensagem que de logout para não continuar o processo 
+                {leave,_} -> ok;
+                _ -> user(Sock,Session)
+            end;
+        {tcp_closed,_} ->
+            io:format("Tcp closed~n",[]),
             Session ! {leave, self()};
-        {rcp_error,_,_} -> 
-            Session ! {leave, self()}
+        {tcp_error,_,_} -> 
+            io:format("Tcp error~n",[]),
+            Session ! {leave, self()};
+        N -> io:format("Nao existe match -> ~p~n",[N])
     end.
 
 proc_data(Data) ->
     case Data of
         ["li",Name|_] -> 
-            io:format("recebeu login~n",[]),
+            %io:format("recebeu login~n",[]),
             {login,self(),Name};
         ["lo"|_] -> 
-            io:format("recebeu logout~n",[]),
+            %io:format("recebeu logout~n",[]),
             {leave,self()};
         ["r"|T] -> 
-            io:format("recebeu read~n",[]),
+            %io:format("recebeu read~n",[]),
             {request,self(),{read,T}};
         ["w"|T] -> 
-            io:format("recebeu write~n",[]),
+            %io:format("recebeu write~n",[]),
             {request,self(),{write,T}};
         _ -> 
             io:format("recebeu mensagem n conhecida ~p~n",[Data]),
