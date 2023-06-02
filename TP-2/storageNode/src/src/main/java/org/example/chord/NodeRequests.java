@@ -10,16 +10,17 @@ import java.util.Random;
 public class NodeRequests implements NodeRequestsInterface{
     private static final long TIMEOUT_MS = 2000;
     private static Random rand = new Random(System.nanoTime());
-    private final String identity = String.format(
-            "%04X-%04X", rand.nextInt(), rand.nextInt()
-    );
+
+    private static String getIdentity(){
+        return String.format("%04X-%04X-%04X", rand.nextInt(), rand.nextInt(),rand.nextInt());
+    }
 
     public Finger findPredecessor(Finger node){
         Finger predecessor = null;
         try (ZContext context = new ZContext()) {
             String message = "get_predecessor|" + node.getId();
 
-            String replyString = sendDealer(context,identity,node.getAddress(),node.getId(),message);
+            String replyString = sendDealer(context,node.getAddress(),node.getId(),message);
 
             String[] values = replyString.split("\\|");
             if (values[0].equals("get_predecessor_response")) {
@@ -37,22 +38,13 @@ public class NodeRequests implements NodeRequestsInterface{
     public String notifyRequest(Finger origin, Finger destiny) {
         try (ZContext context = new ZContext()) {
             String message = "notify|" + origin.getId() + "|" + origin.getAddress();
-            return sendDealer(context,identity,destiny.getAddress(),destiny.getId(),message);
+            return sendDealer(context,destiny.getAddress(),destiny.getId(),message);
         }
     }
 
-
-    public void join_start_Request(String startingNode){
+    public void join_complete_Request(String loadBalancer,int nodeID){
         try (ZContext context = new ZContext()) {
-            sendDealerWAck(context, identity,startingNode,null,"add_node");
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void join_complete_Request(String startingNode){
-        try (ZContext context = new ZContext()) {
-            sendDealerWAck(context, identity,startingNode,null,"join_completed");
+            sendDealerWAck(context,loadBalancer,"","join_completed|"+nodeID);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -68,7 +60,7 @@ public class NodeRequests implements NodeRequestsInterface{
             while (nextNodeAddress!=null) {
                 String message = "find_successor|" + id;
 
-                String replyString = sendDealer(context,identity,nextNodeAddress,nextNodeId,message);
+                String replyString = sendDealer(context,nextNodeAddress,nextNodeId,message);
 
                 String[] values = replyString.split("\\|");
 
@@ -92,11 +84,11 @@ public class NodeRequests implements NodeRequestsInterface{
         return successor;
     }
 
-    private static boolean sendDealerWAck(ZContext context, String identity, String destiny, Integer nodeId, String message) throws InterruptedException {
-        String replyString = "";
+    private static boolean sendDealerWAck(ZContext context, String destiny, String nodeId, String message) throws InterruptedException {
+        String replyString;
 
         ZMQ.Socket socket = context.createSocket(SocketType.DEALER);
-        socket.setIdentity(identity.getBytes(ZMQ.CHARSET));
+        socket.setIdentity(getIdentity().getBytes(ZMQ.CHARSET));
         socket.connect(destiny);
 
         ZMQ.Poller poller = context.createPoller(1);
@@ -126,9 +118,9 @@ public class NodeRequests implements NodeRequestsInterface{
         return true;
     }
 
-    private static String sendDealer(ZContext context, String identity, String destiny, Integer nodeId, String message) {
+    private static String sendDealer(ZContext context, String destiny, Integer nodeId, String message) {
         ZMQ.Socket socket = context.createSocket(SocketType.DEALER);
-        socket.setIdentity(identity.getBytes(ZMQ.CHARSET));
+        socket.setIdentity(getIdentity().getBytes(ZMQ.CHARSET));
         socket.connect(destiny);
         socket.send(nodeId + "|" + message, 0);
 

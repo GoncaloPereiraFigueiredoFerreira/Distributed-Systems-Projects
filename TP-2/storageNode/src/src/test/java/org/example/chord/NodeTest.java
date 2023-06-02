@@ -1,6 +1,7 @@
 package org.example.chord;
 
 import org.example.HashingAlgorithm;
+import org.example.LoadBalancer;
 import org.example.chord.storage.DataStorage;
 import org.example.chord.storage.Dependencie;
 import org.example.chord.storage.Version;
@@ -21,6 +22,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class NodeTest {
     @Test
     void startChord() throws NoSuchAlgorithmException {
+        LoadBalancer loadBalancer = new LoadBalancer();
+        loadBalancer.run();
+        /*
         for (int i=0;i<10;i++){
             int basePort = 5555;
             Thread thread = new Thread(new NodeRunner("tcp://localhost:"+(basePort+i*4),"tcp://localhost:5555",5));
@@ -31,7 +35,7 @@ class NodeTest {
         test.run();
         // Print the successor of each node
         //System.out.println("Node 2 successor: " + node2.getSuccessor());
-       // System.out.println("Node 3 successor: " + node3.getSuccessor());
+       // System.out.println("Node 3 successor: " + node3.getSuccessor());*/
     }
 
     @Test

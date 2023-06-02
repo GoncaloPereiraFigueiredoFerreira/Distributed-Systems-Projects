@@ -11,34 +11,26 @@ import java.util.*;
 
 public class NodeRunner implements Runnable {
     private final String startingNodeAddress;
+    private final String loadBalancerAddress;
+    private final Boolean firstExecution;
     private Boolean isAddingNode;
     private final Integer defaultNode;
     private final Map<Integer,Node> nodes;
     private final HashingAlgorithm hashingAlgorithm;
     private final String nodeAddress;
-    public NodeRunner(String address,String startingNodeAddress,Integer numberOfReplicas) throws NoSuchAlgorithmException {
+    public NodeRunner(Boolean firstExecution,String address,String startingNodeAddress,List<Integer> ids,String loadBalancerAddress) throws NoSuchAlgorithmException {
         this.startingNodeAddress = startingNodeAddress;
         this.isAddingNode = false;
         this.nodeAddress = address;
+        this.loadBalancerAddress = loadBalancerAddress;
+        this.firstExecution = firstExecution;
 
         this.hashingAlgorithm = new HashingAlgorithm(1);
-        List<Integer> ids = generateReplicaIds(numberOfReplicas);
-
         defaultNode = ids.get(0);
         nodes = new HashMap<>();
         for (Integer nodeId:ids){
-            Boolean isMaster = Objects.equals(nodeId, defaultNode) && Objects.equals(startingNodeAddress, nodeAddress);
-                nodes.put(nodeId,new Node(isMaster,nodeId,address));
+            nodes.put(nodeId,new Node(nodeId,address));
         }
-    }
-
-    private List<Integer> generateReplicaIds(Integer numberOfReplicas){
-        List<Integer> ids = new ArrayList<>();
-        for (int i = 0; i <numberOfReplicas; i++) {
-            Integer key = hashingAlgorithm.hash(nodeAddress + i);
-            ids.add(key);
-        }
-        return ids;
     }
     @Override
     public void run() {
@@ -49,8 +41,8 @@ public class NodeRunner implements Runnable {
 
             Thread newThread = new Thread(() -> {
                 for (Node node : nodes.values()) {
-                    if (!node.isMaster()) {
-                        node.joinRing(startingNodeAddress);
+                    if (!(firstExecution&&node.getNodeId()==defaultNode)) {
+                        node.joinRing(startingNodeAddress,loadBalancerAddress);
                     }
                 }
             });
@@ -177,22 +169,6 @@ public class NodeRunner implements Runnable {
 
                 Map<String,List<Version>> keysToSend = workingNode.notify(new Finger(originNodeId,originNodeAddress));
                 return DataStorage.keysToString(keysToSend);
-            }
-            case "add_node" -> {
-                System.out.println("Node address: "+ this.nodeAddress  + ":received add_node");
-                if(workingNode.isMaster() && !isAddingNode) {
-                    isAddingNode = true;
-                    return "ACK";
-                }
-                else return "NACK";
-            }
-            case "join_completed" -> {
-                System.out.println("Node address: "+ this.nodeAddress  + ": received JoinComplete");
-                if(workingNode.isMaster() && isAddingNode) {
-                    isAddingNode=false;
-                    return "ACK";
-                }
-                else return "NACK";
             }
             case "get_predecessor" -> {
                 Finger predecessor = workingNode.getPredecessor();

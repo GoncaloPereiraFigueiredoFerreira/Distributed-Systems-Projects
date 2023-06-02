@@ -20,22 +20,16 @@ public class Node {
                 "}\n";
     }
     private final NodeRequestsInterface nodeRequests = new NodeRequests();
-    private final Boolean master;
     private Boolean working;
     private final String nodeAddress;
-    private int nodeId;
+    private final int nodeId;
     private final Finger[] fingerTable;
     private final int m;
     private final DataStorage dataStorage;
     private Finger predecessor;
 
-    public Boolean isMaster() {
-        return master;
-    }
-
-    public Node(Boolean master, int nodeId, String nodeAddress) throws NoSuchAlgorithmException {
-        this.master = master;
-        this.working=master; // not mistaken, if not master then it is not working on initialization
+    public Node(int nodeId, String nodeAddress) throws NoSuchAlgorithmException {
+        this.working=false; // not mistaken, if not master then it is not working on initialization
         this.nodeId = nodeId;
         this.nodeAddress = nodeAddress;
         this.predecessor = null;
@@ -54,12 +48,14 @@ public class Node {
         return working;
     }
 
+    public int getNodeId() {
+        return nodeId;
+    }
 
-    public void joinRing(String startingNode){
-        nodeRequests.join_start_Request(startingNode);
+    public void joinRing(String startingNode, String loadBalancerAddress){
         this.fingerTable[1] = nodeRequests.find_successor_request(nodeId,new Finger(null,startingNode));
         working = true;
-        nodeRequests.join_complete_Request(startingNode);
+        nodeRequests.join_complete_Request(loadBalancerAddress,nodeId);
     }
 
     public Map<String,Boolean> fix_Fingers(Integer next){
