@@ -8,12 +8,10 @@ import java.util.Map;
 public class ClientOperations {
     private final SocketChannel socket;
     private Map<String,String> result ;
-    private final String client;
 
-    public ClientOperations(String client, InetSocketAddress address) throws IOException {
+    public ClientOperations(InetSocketAddress address) throws IOException {
         this.result= new HashMap<>();
         this.socket = SocketChannel.open();
-        this.client = client;
         socket.connect(address);
         if (socket.isConnected()){
             System.out.println("Socket is connected to Session Node!");
@@ -23,41 +21,62 @@ public class ClientOperations {
         //Format map to a string for printing
         return this.result;
     }
-    private byte[] serializeWrites(String key,String value){
-        return new byte[4];
+
+    public void login(String username) throws IOException {
+        ByteBuffer bf = ByteBuffer.allocate(200);
+        byte[] content = ClientProtocol.serializeLogin(username);
+        bf.put(content);
+        bf.flip();
+        socket.write(bf.duplicate());
+        bf.clear();
+        socket.read(bf);
+        bf.flip();
+        if (ClientProtocol.deserializeGeneralResponse(bf.array()))
+            System.out.println("Login response received!");;
     }
 
-    private byte[] serializeNReads(String[] key){
-        return new byte[4];
-    }
 
-    private Map<String,String> deserializeNReads(byte[] bytes){
-        return new HashMap<>();
+    public void logout() throws IOException {
+        ByteBuffer bf = ByteBuffer.allocate(200);
+        byte[] content = ClientProtocol.serializeLogout();
+        bf.put(content);
+        bf.flip();
+        socket.write(bf.duplicate());
+        bf.clear();
+        socket.read(bf);
+        if (ClientProtocol.deserializeGeneralResponse(bf.array()))
+            System.out.println("Logout response received!");;
     }
 
     public void writeValue(String key, String value) throws IOException {
         ByteBuffer bf = ByteBuffer.allocate(200);
-        byte[] content = serializeWrites(key,value);
+        byte[] content = ClientProtocol.serializeWrites(key,value);
         bf.put(content);
         bf.flip();
         socket.write(bf.duplicate());
         bf.clear();
         socket.read(bf);
-        System.out.println("Written <k,v>: (" + key + "," +value + ")" );
-        result.put(key,value);
+        if (ClientProtocol.deserializeGeneralResponse(bf.array())) {
+            System.out.println("Written <k,v>: (" + key + "," + value + ")");
+            result.put(key, value);
+        }
     }
     public Map<String,String> readNValues(String[] keys) throws IOException {
         ByteBuffer bf = ByteBuffer.allocate(200);
-        byte[] content = serializeNReads(keys);
+        byte[] content = ClientProtocol.serializeNReads(keys);
         bf.put(content);
         bf.flip();
         socket.write(bf.duplicate());
         bf.clear();
         socket.read(bf);
         bf.flip();
-        Map<String,String> reads = deserializeNReads(bf.array());
-        this.result.putAll(reads);
-        return reads;
+        Map<String,String> reads = ClientProtocol.deserializeNReads(bf.array());
+        if (reads!=null){
+            this.result.putAll(reads);
+            return reads;
+        }
+        return null;
+        //
     }
 
 

@@ -28,25 +28,29 @@ public class ClientTest {
 
     @Test
     public void simpleTest() throws IOException {
-        ClientOperations co1 = new ClientOperations("Ganso", InetSocketAddress.createUnresolved("localhost",80));
+        ClientOperations co1 = new ClientOperations(null);
         co1.writeValue("pão","manteiga");
         co1.readNValues(new String[]{"pão"});
         HashMap<String,String> expected = new HashMap<>();
         expected.put("pão","manteiga");
+        co1.logout();
         assert sameMap(expected,co1.returnResults());
     }
 
     @Test
     public void multipleReadsTest() throws IOException{
         // Fill the storage
-        ClientOperations co1 = new ClientOperations("Ganso", InetSocketAddress.createUnresolved("localhost",80));
+        ClientOperations co1 = new ClientOperations(null);
+        co1.login("Ganso");
         co1.writeValue("pão","nutella");
         co1.writeValue("croissant","fiambre");
         co1.writeValue("baguete","queijo");
         co1.writeValue("broa","mel");
 
+
         // Diferent server
-        ClientOperations co2 = new ClientOperations("Ganso", InetSocketAddress.createUnresolved("localhost",80));
+        ClientOperations co2 = new ClientOperations( null);
+        co1.login("Luis");
         Map<String,String> read = co2.readNValues(new String[]{"pão","croissant","broa","mel"});
         Map<String,String> expected = new HashMap<>();
         expected.put("pão","nutella");
@@ -54,7 +58,6 @@ public class ClientTest {
         expected.put("baguete","queijo");
         expected.put("broa","mel");
         assert sameMap(expected,read);
-
     }
 
 
@@ -62,11 +65,14 @@ public class ClientTest {
     @Test
     public void cachedValue() throws IOException{
         // Num primeiro servidor de sessão
-        ClientOperations co1 = new ClientOperations("Ganso", InetSocketAddress.createUnresolved("localhost",80));
+        ClientOperations co1 = new ClientOperations( null);
+        co1.login("Ganso");
         co1.writeValue("pão","nutella");
+        co1.logout();
 
         // Num segundo servidor de sessão
-        ClientOperations co2 = new ClientOperations("Ganso", InetSocketAddress.createUnresolved("localhost",80));
+        ClientOperations co2 = new ClientOperations(null);
+        co1.login("Ganso");
         //1st Read
         long start = System.nanoTime();
         co2.readNValues(new String[]{"pão"});
@@ -87,7 +93,7 @@ public class ClientTest {
 
     @Test
     public void throttledTest() throws IOException{
-        ClientOperations co1 = new ClientOperations("Ganso", InetSocketAddress.createUnresolved("localhost",80));
+        ClientOperations co1 = new ClientOperations(null);
         for (int i =0; i<200; i++){
             co1.writeValue("pão","manteiga");
         }
@@ -97,8 +103,8 @@ public class ClientTest {
 
     @Test
     public void CausalCoherenceTest() throws IOException{
-        ClientOperations co1 = new ClientOperations("Ganso", InetSocketAddress.createUnresolved("localhost",80));
-        ClientOperations co2 = new ClientOperations("Luis", InetSocketAddress.createUnresolved("localhost",80));
+        ClientOperations co1 = new ClientOperations(null);
+        ClientOperations co2 = new ClientOperations(null);
         co1.writeValue("pão","manteiga");
         new Thread(()->{
             try {
@@ -165,7 +171,7 @@ public class ClientTest {
         for (int i =0; i<CLIENT_NUMBER; i++){
             int session = random.nextInt(sessions.size())-1;
             int profile = random.nextInt(4);
-            ClientOperations c = new ClientOperations("Client#"+i,sessions.get(session));
+            ClientOperations c = new ClientOperations(null);
             switch (profile){
                 case 1 ->{
                     new Thread(()->{
