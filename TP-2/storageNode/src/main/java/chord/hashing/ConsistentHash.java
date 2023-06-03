@@ -1,6 +1,5 @@
-package org.example;
+package chord.hashing;
 
-import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 

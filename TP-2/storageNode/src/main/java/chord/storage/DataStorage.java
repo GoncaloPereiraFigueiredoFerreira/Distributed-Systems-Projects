@@ -1,7 +1,7 @@
-package org.example.chord.storage;
+package chord.storage;
 
-import org.example.ConsistentHash;
-import org.example.HashingAlgorithm;
+
+import chord.hashing.HashingAlgorithm;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.*;

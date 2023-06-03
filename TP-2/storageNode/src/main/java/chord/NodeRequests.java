@@ -1,4 +1,4 @@
-package org.example.chord;
+package chord;
 
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;

@@ -1,11 +1,7 @@
-package org.example.chord;
-
-import org.example.HashingAlgorithm;
-import org.example.LoadBalancer;
-import org.example.chord.storage.DataStorage;
-import org.example.chord.storage.Dependencie;
-import org.example.chord.storage.Version;
-import org.junit.Assert;
+import chord.NodeController;
+import chord.hashing.HashingAlgorithm;
+import chord.storage.DataStorage;
+import chord.storage.Dependencie;
 import org.junit.jupiter.api.Test;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
@@ -14,15 +10,16 @@ import org.zeromq.ZMQ;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Random;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 
 class NodeTest {
     @Test
     void startChord() {
-        LoadBalancer loadBalancer = new LoadBalancer(0,1);
+        NodeController loadBalancer = new NodeController(5,5);
         loadBalancer.run();
     }
 
@@ -35,7 +32,7 @@ class NodeTest {
         //insertKey
         try (ZContext context = new ZContext()) {
             //System.out.println(sendDealer(context, identity,"tcp://localhost:5555",null,"insertKey|key|key1|0|key2|1|value"));
-            System.out.println(sendDealer(context, identity,"tcp://localhost:5559",1731348717,"getKey|key|3"));
+            //System.out.println(sendDealer(context, identity,"tcp://localhost:5559",1731348717,"getKey|key|3"));
         }
     }
 

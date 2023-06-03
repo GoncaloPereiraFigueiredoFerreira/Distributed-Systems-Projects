@@ -1,4 +1,4 @@
-package org.example.chord.storage;
+package chord.storage;
 
 import java.util.ArrayList;
 import java.util.Arrays;

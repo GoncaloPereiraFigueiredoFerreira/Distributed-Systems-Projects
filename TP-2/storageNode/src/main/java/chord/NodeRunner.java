@@ -1,9 +1,8 @@
-package org.example.chord;
+package chord;
 
-import org.example.ConsistentHash;
-import org.example.HashingAlgorithm;
-import org.example.chord.storage.DataStorage;
-import org.example.chord.storage.Version;
+import chord.hashing.HashingAlgorithm;
+import chord.storage.DataStorage;
+import chord.storage.Version;
 import org.zeromq.*;
 
 import java.security.NoSuchAlgorithmException;

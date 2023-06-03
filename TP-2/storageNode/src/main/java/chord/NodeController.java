@@ -1,12 +1,12 @@
-package org.example;
+package chord;
 
-import org.example.chord.NodeRunner;
+import chord.hashing.HashingAlgorithm;
 import org.zeromq.*;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-public class LoadBalancer implements Runnable{
+public class NodeController implements Runnable{
     HashSet<Integer> allIds = new HashSet<>();
     HashSet<Integer> addingNodes = new HashSet<>();
     int basePort;
@@ -17,10 +17,11 @@ public class LoadBalancer implements Runnable{
     private int nExtraStartingNodes;
     private int nReplicas;
 
-    public LoadBalancer(int nExtraStartingNodes,int nReplicas){
+    public NodeController(int nExtraStartingNodes, int nReplicas){
         this.nExtraStartingNodes=nExtraStartingNodes;
         this.nReplicas=nReplicas;
     }
+
     @Override
     public void run() {
         basePort = 5555;
@@ -44,7 +45,6 @@ public class LoadBalancer implements Runnable{
                 processRequest(frontend);
             }
         }
-
     }
 
     public void processRequest(ZMQ.Socket socket) {

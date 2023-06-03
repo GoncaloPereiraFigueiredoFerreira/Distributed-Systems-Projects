@@ -1,4 +1,4 @@
-package org.example.chord;
+package chord;
 
 public interface NodeRequestsInterface {
     void join_complete_Request(String loadBalancer,int nodeID);

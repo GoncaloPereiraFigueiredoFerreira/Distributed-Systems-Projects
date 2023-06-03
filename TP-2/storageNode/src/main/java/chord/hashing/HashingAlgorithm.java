@@ -1,4 +1,4 @@
-package org.example;
+package chord.hashing;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;

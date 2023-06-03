@@ -1,4 +1,4 @@
-package org.example.chord;
+package chord;
 
 public class FingerSuccessorPair {
     private final Finger finger;

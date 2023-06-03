@@ -1,4 +1,4 @@
-package org.example.chord;
+package chord;
 
 import java.util.Objects;
 

@@ -1,11 +1,9 @@
-package org.example.chord;
+package chord;
 
-import org.example.ConsistentHash;
-import org.example.HashingAlgorithm;
-import org.example.chord.storage.DataStorage;
-import org.example.chord.storage.Version;
+import chord.hashing.HashingAlgorithm;
+import chord.storage.DataStorage;
+import chord.storage.Version;
 
-import javax.xml.crypto.Data;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
@@ -15,8 +13,7 @@ public class Node {
         return "Node{" +
                 "nodeAddress="+ nodeAddress+
                 ",\n nodeId=" + nodeId +
-                ",\n successors =" + Arrays.toString(fingerTable) +
-                ",\n predecessor=" + predecessor +
+                ",\n fingers =" + Arrays.toString(fingerTable) +
                 "}\n";
     }
     private final NodeRequestsInterface nodeRequests = new NodeRequests();
@@ -26,22 +23,21 @@ public class Node {
     private final Finger[] fingerTable;
     private final int m;
     private final DataStorage dataStorage;
-    private Finger predecessor;
 
     public Node(int nodeId, String nodeAddress,Boolean isFirst) throws NoSuchAlgorithmException {
         this.working=isFirst; // not mistaken, if not master then it is not working on initialization
         this.nodeId = nodeId;
         this.nodeAddress = nodeAddress;
-        this.predecessor = null;
         this.dataStorage= new DataStorage(new HashingAlgorithm(1),nodeId);
         this.m = 31;
         this.fingerTable = new Finger[m+1];
+        fingerTable[0]=null;
         for (int i = 1; i<=m; i++)
             fingerTable[i]=myFinger();
     }
 
     public Finger getPredecessor() {
-        return predecessor;
+        return fingerTable[0];
     }
 
     public Boolean isWorking() {
@@ -83,14 +79,14 @@ public class Node {
     public int getLastKeyVersion(String key) {
         return this.dataStorage.getLastKeyVersion(key);
     }
-    public Version getKey(String value,int version) {
+    public Version getKey(String value, int version) {
         return this.dataStorage.getKey(value,version);
     }
     public Boolean stabilize() {
         boolean stable = true;
         Finger x;
         if(Objects.equals(fingerTable[1], myFinger())) {
-            x = predecessor; //evitar requests quando o pedido é local
+            x = fingerTable[0]; //evitar requests quando o pedido é local
         }
         else {
             x = nodeRequests.findPredecessor(fingerTable[1]);
@@ -106,8 +102,9 @@ public class Node {
     }
 
     public Map<String,List<Version>> notify(Finger n){
+        Finger predecessor = fingerTable[0];
         if(predecessor==null || isInRange(n.getId(), predecessor.getId(), nodeId))
-            predecessor=n;
+            fingerTable[0]=n;
         return dataStorage.moveKeys(n.getId()); //TODO suss?
     }
 
@@ -118,6 +115,7 @@ public class Node {
     }
 
     public boolean isRightSuccessor(int id) { //TODO suss?
+        Finger predecessor = fingerTable[0];
         if(predecessor==null)
             return true; //TODO Might be wrong
         return isInRange(id, predecessor.getId(), nodeId);
