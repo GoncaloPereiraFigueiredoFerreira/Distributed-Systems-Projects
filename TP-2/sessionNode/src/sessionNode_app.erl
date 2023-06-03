@@ -16,9 +16,11 @@
 
 
 start(_StartType, _StartArgs) ->
-    sessionManager:start(),
     sessionNode_sup:start_link(),
-    main(5555).
+    sessionManager:start(),
+    spawn(fun() -> main(12345) end),
+    spawn(fun() -> main(12346) end),
+    main(12347).
 
 stop(_State) ->
     ok.
@@ -86,7 +88,7 @@ session(Users,All_users,Ban_user,Sessions) ->
                         Pid ! {resp,"false"},
                         Map = maps:put(Pid,{Nome,Trortled,{Num,L,Mean}},Users)
                 end,
-                session(maps:put(Map),All_users,Ban_user,Sessions);
+                session(Map,All_users,Ban_user,Sessions);
             
         {timer} ->
             {{Ban_user1,Delta},Users1} = 
@@ -110,7 +112,7 @@ session(Users,All_users,Ban_user,Sessions) ->
                         same -> {{Acc_ban,Acc_ban_delta},maps:put(Key,S,Acc_user)}
                     end 
                 end,{{Ban_user,orSet:new()},#{}},Users),
-            %io:format("Dic timer ~p ~nBan Users: ~p~nDelta: ~p~n",[Users1,orSet:elements(Ban_user1),Delta]),
+            io:format("Dic timer ~p ~nBan Users: ~p~nDelta: ~p~n",[Users1,orSet:elements(Ban_user1),Delta]),
             [Pid_s ! {ban_state,Delta} || Pid_s <- Sessions],
             session(Users1,All_users,Ban_user1,Sessions);
         {login, Pid, Name} ->
@@ -190,7 +192,7 @@ user(Sock,Session) ->
 proc_data(Data) ->
     case Data of
         ["li",Name|_] -> 
-            %io:format("recebeu login~n",[]),
+            io:format("recebeu login~n",[]),
             {login,self(),Name};
         ["lo"|_] -> 
             %io:format("recebeu logout~n",[]),
@@ -209,7 +211,8 @@ proc_data(Data) ->
 parse_data(Data) -> 
     lists:foldr(fun(Elem,Acc) -> split(Elem,Acc) end,[],Data).
 
-split($\n,A) -> A;    
+split($\n,A) -> A;
+split(0,A) -> A;    
 split($|,[[]|T]) -> [[]|T];
 split($|,A) -> [[]] ++ A;
 split(Elem,[H|T]) -> [[Elem] ++ H|T];
