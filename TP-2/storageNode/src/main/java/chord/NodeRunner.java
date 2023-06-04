@@ -166,22 +166,22 @@ public class NodeRunner implements Runnable {
                 String key = values[1];
                 int hashValue = hashingAlgorithm.hash(key);
                 if(workingNode.isRightSuccessor(hashValue)) { //Returns index of version inserted
-                    return String.valueOf(workingNode.insertKey(values[1], Version.fromStrings(Arrays.copyOfRange(values, 2, values.length))));
+                    return key+"|"+ workingNode.insertKey(values[1], Version.fromStrings(Arrays.copyOfRange(values, 2, values.length)));
                 }
                 else{
                     FingerSuccessorPair successor = workingNode.findSuccessor(hashValue);
-                    return "successor|" + successor.getFinger().getId() + "|"+ successor.getFinger().getAddress();
+                    return  key + "|successor|" + successor.getFinger().getId() + "|"+ successor.getFinger().getAddress();
                 }
             }
             case "getLastVersionKey" -> {
                 String key = values[1];
                 int hashValue = hashingAlgorithm.hash(key);
                 if(workingNode.isRightSuccessor(hashValue)) {
-                    return String.valueOf(workingNode.getLastKeyVersion(key));
+                    return key+"|"+ workingNode.getLastKeyVersion(key);
                 }
                 else{
                     FingerSuccessorPair successor = workingNode.findSuccessor(hashValue);
-                    return "successor|" + successor.getFinger().getId() + "|"+ successor.getFinger().getAddress();
+                    return key+"|successor|" + successor.getFinger().getId() + "|"+ successor.getFinger().getAddress();
                 }
             }
             case "getKey" -> {
@@ -189,11 +189,11 @@ public class NodeRunner implements Runnable {
                 int hashValue = hashingAlgorithm.hash(key);
                 if(workingNode.isRightSuccessor(hashValue)) {
                     int version = Integer.parseInt(values[2]);
-                    return String.valueOf(workingNode.getKey(key,version));
+                    return key+"|"+ workingNode.getKey(key, version);
                 }
                 else{
                     FingerSuccessorPair successor = workingNode.findSuccessor(hashValue);
-                    return "successor|" + successor.getFinger().getId() + "|"+ successor.getFinger().getAddress();
+                    return key+"|successor|" + successor.getFinger().getId() + "|"+ successor.getFinger().getAddress();
                 }
             }
 
