@@ -27,7 +27,8 @@ class NodeTest {
     void clientTest() {
         try (ZContext context = new ZContext()) {
             //System.out.println(sendReq(context,"tcp://localhost:5555",null,"insertKey|key|key1|0|key2|1|value"));
-            System.out.println(sendDealer(context,"tcp://localhost:5555",1763140979,"insertKey|key3|key1|0|key2|1|value"));
+            System.out.println(sendDealer(context,"tcp://localhost:5555",1763140979,"insertKey|key2|key1|0|key2|1|value"));
+
         }
     }
 
@@ -59,6 +60,17 @@ class NodeTest {
         ZMQ.Socket socket = context.createSocket(SocketType.DEALER);
         socket.connect(destiny);
         socket.send(nodeId + "|" + message, 0);
+        byte[] reply = socket.recv(0);
+        context.destroySocket(socket);
+        return new String(reply, ZMQ.CHARSET);
+    }
+
+    private static String sendDealer(ZContext context, String destiny, Integer nodeId, String message) {
+        ZMQ.Socket socket = context.createSocket(SocketType.DEALER);
+        socket.connect(destiny);
+        socket.sendMore("");
+        socket.send(nodeId + "|" + message, 0);
+        socket.recv(0);
         byte[] reply = socket.recv(0);
         context.destroySocket(socket);
         return new String(reply, ZMQ.CHARSET);
