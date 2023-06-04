@@ -34,12 +34,10 @@ class VersionTest {
         setUp();
         DataStorage dataStorage = new DataStorage(new HashingAlgorithm(1),0);
         List<Dependencie> dependencies = new ArrayList<>();
-        dependencies.add(new Dependencie("key1",0));
-        dependencies.add(new Dependencie("key2",1));
         dataStorage.insertKey(dependencies,"key1","val1");
         dataStorage.insertKey(dependencies,"key1","val1");
         dataStorage.insertKey(dependencies,"key2","val2");
-        String storageString = dataStorage.toString();
+        String storageString = DataStorage.keysToString(dataStorage.getMap());
         DataStorage dataStorage1 = new DataStorage(new HashingAlgorithm(1),0);
         dataStorage1.insertFromString(storageString);
     }

@@ -25,11 +25,16 @@ public class Version {
 
     public String toString(){
         StringBuilder depString = new StringBuilder();
-        for (int i=0;i<dependencies.size();i++){
-            depString.append(dependencies.get(i).toString());
-            if(i!=dependencies.size()-1)
-                depString.append("|");
+        if(dependencies.isEmpty())
+            depString.append("empty");
+        else {
+            for (int i=0;i<dependencies.size();i++){
+                depString.append(dependencies.get(i).toString());
+                if(i!=dependencies.size()-1)
+                    depString.append("|");
+            }
         }
+
         return depString +"|"+ value;
     }
 
@@ -37,10 +42,12 @@ public class Version {
         List<String> partsList = Arrays.stream(inputs).toList();
         List<Dependencie> dependencieList = new ArrayList<>();
 
-        for (int i=0;i<partsList.size()-1;i+=2){
-            String key = partsList.get(i);
-            int version = Integer.parseInt(partsList.get(i + 1));
-            dependencieList.add(new Dependencie(key,version));
+        if(partsList.size()>2) {
+            for (int i = 0; i < partsList.size() - 1; i += 2) {
+                String key = partsList.get(i);
+                int version = Integer.parseInt(partsList.get(i + 1));
+                dependencieList.add(new Dependencie(key, version));
+            }
         }
         String value = partsList.get(partsList.size() - 1);
 
