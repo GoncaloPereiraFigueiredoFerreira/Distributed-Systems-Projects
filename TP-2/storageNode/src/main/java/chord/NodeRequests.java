@@ -14,7 +14,7 @@ public class NodeRequests implements NodeRequestsInterface{
         try (ZContext context = new ZContext()) {
             String message = "get_predecessor|" + node.getId();
 
-            String replyString = sendRep(context,node.getAddress(),node.getId(),message);
+            String replyString = sendDealer(context,node.getAddress(),node.getId(),message);
 
             String[] values = replyString.split("\\|");
             if (values[0].equals("get_predecessor_response")) {
@@ -32,7 +32,7 @@ public class NodeRequests implements NodeRequestsInterface{
     public String notifyRequest(Finger origin, Finger destiny) {
         try (ZContext context = new ZContext()) {
             String message = "notify|" + origin.getId() + "|" + origin.getAddress();
-            return sendRep(context,destiny.getAddress(),destiny.getId(),message);
+            return sendDealer(context,destiny.getAddress(),destiny.getId(),message);
         }
     }
 
@@ -54,7 +54,7 @@ public class NodeRequests implements NodeRequestsInterface{
             while (nextNodeAddress!=null) {
                 String message = "find_successor|" + id;
 
-                String replyString = sendRep(context,nextNodeAddress,nextNodeId,message);
+                String replyString = sendDealer(context,nextNodeAddress,nextNodeId,message);
 
                 String[] values = replyString.split("\\|");
 
@@ -81,7 +81,7 @@ public class NodeRequests implements NodeRequestsInterface{
     private static boolean sendDealerWAck(ZContext context, String destiny, String nodeId, String message) throws InterruptedException {
         String replyString;
 
-        ZMQ.Socket socket = context.createSocket(SocketType.REQ);
+        ZMQ.Socket socket = context.createSocket(SocketType.DEALER);
         socket.connect(destiny);
 
         ZMQ.Poller poller = context.createPoller(1);
@@ -101,8 +101,8 @@ public class NodeRequests implements NodeRequestsInterface{
         return true;
     }
 
-    private static String sendRep(ZContext context, String destiny, Integer nodeId, String message) {
-        ZMQ.Socket socket = context.createSocket(SocketType.REQ);
+    private static String sendDealer(ZContext context, String destiny, Integer nodeId, String message) {
+        ZMQ.Socket socket = context.createSocket(SocketType.DEALER);
         socket.connect(destiny);
         socket.send(nodeId + "|" + message, 0);
         byte[] reply = socket.recv(0);
