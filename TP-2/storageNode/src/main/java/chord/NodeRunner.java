@@ -34,7 +34,7 @@ public class NodeRunner implements Runnable {
     public void run() {
         // Start the ZeroMQ REP socket to receive join requests
         try (ZContext context = new ZContext()) {
-            ZMQ.Socket frontend = context.createSocket(SocketType.ROUTER);
+            ZMQ.Socket frontend = context.createSocket(SocketType.REP);
             frontend.bind(nodeAddress);
 
             Thread newThread = new Thread(() -> {
@@ -119,22 +119,9 @@ public class NodeRunner implements Runnable {
 
 
     public void processRequest(ZMQ.Socket socket) {
-        ZMsg msg = ZMsg.recvMsg(socket);
-        ZFrame address = msg.pop();
-        ZFrame content = msg.pop();
-        assert (content != null);
-        msg.destroy();
-
-        String returnMessage = processMessage(new String(content.getData(), ZMQ.CHARSET));
-        ZFrame newContent;
-        newContent = new ZFrame(Objects.requireNonNullElse(returnMessage, "empty"));
-
-        address.send(socket,ZFrame.REUSE + ZFrame.MORE);
-        newContent.send(socket, ZFrame.REUSE);
-        newContent.destroy();
-
-        address.destroy();
-        content.destroy();
+        String cont = socket.recvStr(0);
+        String returnMessage = processMessage(cont);
+        socket.send(returnMessage);
     }
 
     private String processMessage(String requestString) {
@@ -178,16 +165,15 @@ public class NodeRunner implements Runnable {
             case "insertKey" -> {
                 String key = values[1];
                 int hashValue = hashingAlgorithm.hash(key);
-                if(workingNode.isRightSuccessor(hashValue)) {
-                    workingNode.insertKey(values[1], Version.fromStrings(Arrays.copyOfRange(values, 2, values.length)));
-                    return "ACK";
+                if(workingNode.isRightSuccessor(hashValue)) { //Returns index of version inserted
+                    return String.valueOf(workingNode.insertKey(values[1], Version.fromStrings(Arrays.copyOfRange(values, 2, values.length))));
                 }
                 else{
                     FingerSuccessorPair successor = workingNode.findSuccessor(hashValue);
                     return "successor|" + successor.getFinger().getId() + "|"+ successor.getFinger().getAddress();
                 }
             }
-            case "getLastKeyVersion" -> {
+            case "getLastVersionKey" -> {
                 String key = values[1];
                 int hashValue = hashingAlgorithm.hash(key);
                 if(workingNode.isRightSuccessor(hashValue)) {

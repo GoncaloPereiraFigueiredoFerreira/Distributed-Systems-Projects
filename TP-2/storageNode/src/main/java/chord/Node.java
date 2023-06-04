@@ -72,8 +72,8 @@ public class Node {
         return booleans;
     }
 
-    public void insertKey(String key, Version version){
-        this.dataStorage.insertKey(key,version);
+    public int insertKey(String key, Version version){
+        return this.dataStorage.insertKey(key,version);
     }
 
     public int getLastKeyVersion(String key) {

@@ -38,7 +38,7 @@ public class DataStorage {
         }
     }
 
-    public void insertKey(String key, Version version){
+    public int insertKey(String key, Version version){
         try {
             readWriteLock.writeLock().lock();
             if(!map.containsKey(key)){
@@ -46,6 +46,7 @@ public class DataStorage {
             }
             List<Version> versionList = map.get(key);
             versionList.add(version);
+            return versionList.size()-1;
         }finally {
             readWriteLock.writeLock().unlock();
         }

@@ -38,7 +38,7 @@ public class NodeController implements Runnable{
         }
 
         try (ZContext context = new ZContext()) {
-            ZMQ.Socket frontend = context.createSocket(SocketType.ROUTER);
+            ZMQ.Socket frontend = context.createSocket(SocketType.REP);
             frontend.bind(loadBalancerAddress);
 
             while (!Thread.currentThread().isInterrupted()) {
@@ -48,25 +48,12 @@ public class NodeController implements Runnable{
     }
 
     public void processRequest(ZMQ.Socket socket) {
-        ZMsg msg = ZMsg.recvMsg(socket);
-        ZFrame address = msg.pop();
-        ZFrame content = msg.pop();
-        assert (content != null);
-        msg.destroy();
-
-        String[] values = new String(content.getData(), ZMQ.CHARSET).split("\\|");
+        String cont = socket.recvStr(0);
+        String[] values = cont.split("\\|");
         if(Objects.equals(values[0], "")||Objects.equals(values[0], "null"))
             values = Arrays.copyOfRange(values, 1, values.length);
         String returnMessage = processMessageContent(values);
-        ZFrame newContent;
-        newContent = new ZFrame(Objects.requireNonNullElse(returnMessage, "empty"));
-
-        address.send(socket,ZFrame.REUSE + ZFrame.MORE);
-        newContent.send(socket, ZFrame.REUSE);
-        newContent.destroy();
-
-        address.destroy();
-        content.destroy();
+        socket.send(returnMessage);
     }
 
     private String processMessageContent(String[] values)   {

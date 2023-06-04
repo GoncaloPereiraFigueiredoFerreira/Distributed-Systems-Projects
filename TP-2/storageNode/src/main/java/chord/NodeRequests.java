@@ -5,22 +5,16 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
 import java.util.Objects;
-import java.util.Random;
 
 public class NodeRequests implements NodeRequestsInterface{
-    private static final long TIMEOUT_MS = 2000;
-    private static Random rand = new Random(System.nanoTime());
-
-    private static String getIdentity(){
-        return String.format("%04X-%04X-%04X", rand.nextInt(), rand.nextInt(),rand.nextInt());
-    }
+    private static final long TIMEOUT_MS = 10000;
 
     public Finger findPredecessor(Finger node){
         Finger predecessor = null;
         try (ZContext context = new ZContext()) {
             String message = "get_predecessor|" + node.getId();
 
-            String replyString = sendDealer(context,node.getAddress(),node.getId(),message);
+            String replyString = sendRep(context,node.getAddress(),node.getId(),message);
 
             String[] values = replyString.split("\\|");
             if (values[0].equals("get_predecessor_response")) {
@@ -38,7 +32,7 @@ public class NodeRequests implements NodeRequestsInterface{
     public String notifyRequest(Finger origin, Finger destiny) {
         try (ZContext context = new ZContext()) {
             String message = "notify|" + origin.getId() + "|" + origin.getAddress();
-            return sendDealer(context,destiny.getAddress(),destiny.getId(),message);
+            return sendRep(context,destiny.getAddress(),destiny.getId(),message);
         }
     }
 
@@ -60,7 +54,7 @@ public class NodeRequests implements NodeRequestsInterface{
             while (nextNodeAddress!=null) {
                 String message = "find_successor|" + id;
 
-                String replyString = sendDealer(context,nextNodeAddress,nextNodeId,message);
+                String replyString = sendRep(context,nextNodeAddress,nextNodeId,message);
 
                 String[] values = replyString.split("\\|");
 
@@ -87,8 +81,7 @@ public class NodeRequests implements NodeRequestsInterface{
     private static boolean sendDealerWAck(ZContext context, String destiny, String nodeId, String message) throws InterruptedException {
         String replyString;
 
-        ZMQ.Socket socket = context.createSocket(SocketType.DEALER);
-        socket.setIdentity(getIdentity().getBytes(ZMQ.CHARSET));
+        ZMQ.Socket socket = context.createSocket(SocketType.REQ);
         socket.connect(destiny);
 
         ZMQ.Poller poller = context.createPoller(1);
@@ -96,47 +89,24 @@ public class NodeRequests implements NodeRequestsInterface{
 
         while (true) {
             socket.send(nodeId + "|" + message, 0);
-
-            if (poller.poll(TIMEOUT_MS) <= 0) {
-                // Timeout occurred, no reply received
-                //context.destroySocket(socket);
-                //return false;
-            }
-
-            if (poller.pollin(0)) {
-                byte[] reply = socket.recv(0);
-                replyString = new String(reply, ZMQ.CHARSET);
-                if (!replyString.equals("ACK")) {
-                    Thread.sleep(100);  // Wait for a short interval before resending
-                } else {
-                    break;  // Received ACK, exit the loop
-                }
+            byte[] reply = socket.recv(0);
+            replyString = new String(reply, ZMQ.CHARSET);
+            if (!replyString.equals("ACK")) {
+                Thread.sleep(100);  // Wait for a short interval before resending
+            } else {
+                break;  // Received ACK, exit the loop
             }
         }
-
         context.destroySocket(socket);
         return true;
     }
 
-    private static String sendDealer(ZContext context, String destiny, Integer nodeId, String message) {
-        ZMQ.Socket socket = context.createSocket(SocketType.DEALER);
-        socket.setIdentity(getIdentity().getBytes(ZMQ.CHARSET));
+    private static String sendRep(ZContext context, String destiny, Integer nodeId, String message) {
+        ZMQ.Socket socket = context.createSocket(SocketType.REQ);
         socket.connect(destiny);
         socket.send(nodeId + "|" + message, 0);
-
-        ZMQ.Poller poller = context.createPoller(1);
-        poller.register(socket, ZMQ.Poller.POLLIN);
-
-        if (poller.poll(TIMEOUT_MS) <= 0) {
-            // Timeout occurred, no reply received
-            context.destroySocket(socket);
-        }
-        if (poller.pollin(0)) {
-            byte[] reply = socket.recv(0);
-            context.destroySocket(socket);
-            return new String(reply, ZMQ.CHARSET);
-        }
+        byte[] reply = socket.recv(0);
         context.destroySocket(socket);
-        return "";
+        return new String(reply, ZMQ.CHARSET);
     }
 }

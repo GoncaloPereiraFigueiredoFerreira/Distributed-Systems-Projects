@@ -25,27 +25,16 @@ class NodeTest {
 
     @Test
     void clientTest() {
-        Random rand = new Random(System.nanoTime());
-        String identity = String.format(
-                "%04X-%04X", rand.nextInt(), rand.nextInt()
-        );
-        //insertKey
         try (ZContext context = new ZContext()) {
-            //System.out.println(sendDealer(context, identity,"tcp://localhost:5555",null,"insertKey|key|key1|0|key2|1|value"));
-            //System.out.println(sendDealer(context, identity,"tcp://localhost:5559",1731348717,"getKey|key|3"));
+            //System.out.println(sendReq(context,"tcp://localhost:5555",null,"insertKey|key|key1|0|key2|1|value"));
+            System.out.println(sendReq(context,"tcp://localhost:5555",1763140979,"insertKey|key2|key1|0|key2|1|value"));
         }
     }
 
     @Test
     void addNode() {
-        Random rand = new Random(System.nanoTime());
-        String identity = String.format(
-                "%04X-%04X", rand.nextInt(), rand.nextInt()
-        );
-        //insertKey
         try (ZContext context = new ZContext()) {
-            //System.out.println(sendDealer(context, identity,"tcp://localhost:5555",400210732,"insertKey|key|key1|0|key2|1|value"));
-            System.out.println(sendDealer(context, identity,"tcp://localhost:5550",null,"add_node"));
+            System.out.println(sendReq(context,"tcp://localhost:5550",null,"add_node"));
         }
     }
 
@@ -66,9 +55,8 @@ class NodeTest {
         assertNull(dataStorage.getKey("nonExistentKey"));
     }
 
-    private static String sendDealer(ZContext context, String identity, String destiny, Integer nodeId, String message) {
-        ZMQ.Socket socket = context.createSocket(SocketType.DEALER);
-        socket.setIdentity(identity.getBytes(ZMQ.CHARSET));
+    private static String sendReq(ZContext context, String destiny, Integer nodeId, String message) {
+        ZMQ.Socket socket = context.createSocket(SocketType.REQ);
         socket.connect(destiny);
         socket.send(nodeId + "|" + message, 0);
 
