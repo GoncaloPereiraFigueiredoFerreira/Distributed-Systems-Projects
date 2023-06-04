@@ -28,14 +28,13 @@ class NodeTest {
         try (ZContext context = new ZContext()) {
             //System.out.println(sendReq(context,"tcp://localhost:5555",null,"insertKey|key|key1|0|key2|1|value"));
             System.out.println(sendDealer(context,"tcp://localhost:5555",1763140979,"insertKey|key2|key1|0|key2|1|value"));
-
         }
     }
 
     @Test
     void addNode() {
         try (ZContext context = new ZContext()) {
-            System.out.println(sendDealer(context,"tcp://localhost:5550",null,"add_node"));
+            System.out.println(sendReq(context,"tcp://localhost:5550",null,"add_node"));
         }
     }
 
@@ -56,13 +55,26 @@ class NodeTest {
         assertNull(dataStorage.getKey("nonExistentKey"));
     }
 
-    private static String sendDealer(ZContext context, String destiny, Integer nodeId, String message) {
-        ZMQ.Socket socket = context.createSocket(SocketType.DEALER);
+    private static String sendReq(ZContext context, String destiny, Integer nodeId, String message) {
+        ZMQ.Socket socket = context.createSocket(SocketType.REQ);
         socket.connect(destiny);
         socket.send(nodeId + "|" + message, 0);
-        byte[] reply = socket.recv(0);
+
+        ZMQ.Poller poller = context.createPoller(1);
+        poller.register(socket, ZMQ.Poller.POLLIN);
+
+        if (poller.poll(1000) <= 0) {
+            // Timeout occurred, no reply received
+            context.destroySocket(socket);
+            return "Error";
+        }
+        if (poller.pollin(0)) {
+            byte[] reply = socket.recv(0);
+            context.destroySocket(socket);
+            return new String(reply, ZMQ.CHARSET);
+        }
         context.destroySocket(socket);
-        return new String(reply, ZMQ.CHARSET);
+        return "";
     }
 
     private static String sendDealer(ZContext context, String destiny, Integer nodeId, String message) {
