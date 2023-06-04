@@ -34,7 +34,7 @@ public class NodeRunner implements Runnable {
     public void run() {
         // Start the ZeroMQ REP socket to receive join requests
         try (ZContext context = new ZContext()) {
-            ZMQ.Socket frontend = context.createSocket(SocketType.REP);
+            ZMQ.Socket frontend = context.createSocket(SocketType.ROUTER);
             frontend.bind(nodeAddress);
 
             Thread newThread = new Thread(() -> {
@@ -119,9 +119,18 @@ public class NodeRunner implements Runnable {
 
 
     public void processRequest(ZMQ.Socket socket) {
-        String cont = socket.recvStr(0);
-        String returnMessage = processMessage(cont);
-        socket.send(returnMessage);
+        ZMsg msg = ZMsg.recvMsg(socket);
+        ZFrame address = msg.pop();
+        ZFrame content = msg.pop();
+
+        String returnMessage = processMessage(new String(content.getData(), ZMQ.CHARSET));
+        ZFrame newContent;
+        newContent = new ZFrame(Objects.requireNonNullElse(returnMessage, "empty"));
+
+        address.send(socket,ZFrame.REUSE + ZFrame.MORE);
+        newContent.send(socket, ZFrame.REUSE);
+        address.destroy();
+        content.destroy();
     }
 
     private String processMessage(String requestString) {
