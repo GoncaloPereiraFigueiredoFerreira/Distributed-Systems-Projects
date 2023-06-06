@@ -189,7 +189,7 @@ public class NodeRunner implements Runnable {
                 int hashValue = hashingAlgorithm.hash(key);
                 if(workingNode.isRightSuccessor(hashValue)) {
                     int version = Integer.parseInt(values[2]);
-                    return key+"|"+ workingNode.getKey(key, version);
+                    return key+"|"+ version +"|"+ workingNode.getKey(key, version);
                 }
                 else{
                     FingerSuccessorPair successor = workingNode.findSuccessor(hashValue);
