@@ -166,7 +166,7 @@ public class NodeRunner implements Runnable {
                 String key = values[1];
                 int hashValue = hashingAlgorithm.hash(key);
                 if(workingNode.isRightSuccessor(hashValue)) { //Returns index of version inserted
-                    return key+"|"+ workingNode.insertKey(values[1], Version.fromStrings(Arrays.copyOfRange(values, 2, values.length)));
+                    return key+"|"+ workingNode.insertKey(values[1], Version.fromStrings(Arrays.copyOfRange(values, 2, values.length))) + "|inserted";
                 }
                 else{
                     FingerSuccessorPair successor = workingNode.findSuccessor(hashValue);

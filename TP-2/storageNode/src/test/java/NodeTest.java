@@ -26,8 +26,8 @@ class NodeTest {
     @Test
     void clientTest() {
         try (ZContext context = new ZContext()) {
-            //System.out.println(sendReq(context,"tcp://localhost:5555",null,"insertKey|key|key1|0|key2|1|value"));
-            System.out.println(sendDealer(context,"tcp://localhost:5555",1763140979,"insertKey|key2|key1|0|key2|1|value"));
+            System.out.println(sendDealer(context,"tcp://localhost:5555",400210732,"getKey|key|1"));
+            //System.out.println(sendDealer(context,"tcp://localhost:5555",1763140979,"insertKey|key2|key1|0|value"));
         }
     }
 

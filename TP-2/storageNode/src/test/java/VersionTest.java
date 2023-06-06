@@ -34,6 +34,7 @@ class VersionTest {
         setUp();
         DataStorage dataStorage = new DataStorage(new HashingAlgorithm(1),0);
         List<Dependencie> dependencies = new ArrayList<>();
+        dependencies.add(new Dependencie("key2",4));
         dataStorage.insertKey(dependencies,"key1","val1");
         dataStorage.insertKey(dependencies,"key1","val1");
         dataStorage.insertKey(dependencies,"key2","val2");
