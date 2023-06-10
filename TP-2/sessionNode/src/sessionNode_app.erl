@@ -27,8 +27,9 @@ stop(_State) ->
 
 main(Port) ->
     io:format("Sessao na porta ~p~n",[Port]),
+    Request = request:start(),
     {ok, LSock} = gen_tcp:listen(Port, [{active, once}, {packet, line},{reuseaddr, true}]),
-    Session = spawn(fun() -> session(#{},orSet:new(),orSet:new(),[]) end),
+    Session = spawn(fun() -> session({#{},orSet:new(),orSet:new(),[]},Request) end),
     sessionManager:add_session(Session),
     spawn(fun() -> acceptor(LSock, Session) end),
     timer(?UPDATE,Session),
@@ -67,28 +68,29 @@ login(Sock) ->
 
 % responsabilidade de retirar um cliente do ban e da sessao que o baniu 
 
-session(Users,All_users,Ban_user,Sessions) ->
+session({Users,All_users,Ban_user,Sessions},Manager) ->
     receive
         {sessions,Sessions} ->
             io:format("Sessions: ~p~n",[lists:delete(self(),Sessions)]),
-            session(Users,All_users,Ban_user,lists:delete(self(),Sessions));
+            Ret = {Users,All_users,Ban_user,Sessions};
+
         {request,Pid,T} ->
             {Nome,Trortled,{Num,L,Mean}} = maps:get(Pid,Users),
                 case {Trortled,Num} of
                     {false,Num} ->  
-                        Pid ! {resp,"ok"},
+                        request:request(T,Pid,Manager),
                         Map = maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users);
                     {{true,_,_},Num} when Num < ?MAX_MESSAGE ->
-                        Pid ! {resp,"ok"},
+                        request:request(T,Pid,Manager),
                         Map = maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users);
                     {true,Num} when Num < ?MAX_MESSAGE ->
-                        Pid ! {resp,"ok"},
+                        request:request(T,Pid,Manager),
                         Map = maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users);
                     {_,_} ->
                         Pid ! {resp,"false"},
                         Map = maps:put(Pid,{Nome,Trortled,{Num,L,Mean}},Users)
                 end,
-                session(Map,All_users,Ban_user,Sessions);
+                Ret = {Map,All_users,Ban_user,Sessions};
             
         {timer} ->
             {{Ban_user1,Delta},Users1} = 
@@ -112,9 +114,10 @@ session(Users,All_users,Ban_user,Sessions) ->
                         same -> {{Acc_ban,Acc_ban_delta},maps:put(Key,S,Acc_user)}
                     end 
                 end,{{Ban_user,orSet:new()},#{}},Users),
-            io:format("Dic timer ~p ~nBan Users: ~p~nDelta: ~p~n",[Users1,orSet:elements(Ban_user1),Delta]),
+            %io:format("Dic timer ~p ~nBan Users: ~p~nDelta: ~p~n",[Users1,orSet:elements(Ban_user1),Delta]),
             [Pid_s ! {ban_state,Delta} || Pid_s <- Sessions],
-            session(Users1,All_users,Ban_user1,Sessions);
+            Ret = {Users1,All_users,Ban_user1,Sessions};
+
         {login, Pid, Name} ->
             case orSet:is_element(Name,Ban_user) of
                 true ->
@@ -125,7 +128,7 @@ session(Users,All_users,Ban_user,Sessions) ->
                     Map = maps:put(Pid,{Name,false,{0,[],0}},Users)
             end,
             [Pid_s ! {user_state,Delta} || Pid_s <- Sessions],
-            session(Map,All_users1,Ban_user,Sessions);
+            Ret = {Map,All_users1,Ban_user,Sessions};
             
         {leave, Pid} ->
             io:format("Leave Dic: ~p~n",[Users]),
@@ -136,14 +139,18 @@ session(Users,All_users,Ban_user,Sessions) ->
                 _ -> New_users = maps:remove(Pid,Users) 
             end,
             [Pid_s ! {user_state,Delta} || Pid_s <- Sessions],
-            session(New_users,All_users1,Ban_user,Sessions);
+            Ret = {New_users,All_users1,Ban_user,Sessions};
+
         {user_state, Delta} ->
             All_users1 = orSet:join(Delta,All_users),
-            session(Users,All_users1,Ban_user,Sessions);
+            Ret = {Users,All_users1,Ban_user,Sessions};
+
         {ban_state, Delta} -> 
             Ban_user1 = orSet:join(Delta,Ban_user),
-            session(Users,All_users,Ban_user1,Sessions)
-    end.
+            Ret = {Users,All_users,Ban_user1,Sessions}
+
+    end,
+    session(Ret,Manager).
 
 update_request({Nome,T,{Num,List,_}},Ban_user) ->
     Intervale = round(?TIME / ?UPDATE),
