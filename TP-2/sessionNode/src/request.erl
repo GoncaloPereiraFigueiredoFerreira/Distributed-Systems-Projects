@@ -7,8 +7,9 @@
 % servidor inicial "tcp://localhost:5555"
 
 start() ->
-	Ret = spawn(fun() -> server_manager([],#{}) end),
-	connect_server({"localhost",5555},Ret),
+	Cache = cache:start(),
+	Ret = spawn(fun() -> server_manager([],#{},Cache) end),
+	connect_server({"localhost",5555},Ret,Cache),
 	Ret.
 
 request({Mode,Dados},User,M) -> 
@@ -26,7 +27,7 @@ proc_req(read,Waiting,Recv,Manager,User) ->
 	receive
 		{version,Key,Version} ->
 			case Version of
-				"-1" -> User ! "err";
+				"-1" -> User ! {resp,"err"};
 				_ -> 
 					Manager ! {value,self(),User,Key,Version},
 					proc_req(read,Waiting-1,Recv,Manager,User)
@@ -70,7 +71,7 @@ proc_req(value,{Acc_key,Acc_ctx},Num,Manager,User) ->
 		{{redirect,Key,NodeId,Addr},{get_key,Key,V}} ->
 			Manager ! {add_server,Addr,NodeId},
 			Manager ! {read,self(),User,[Key],NodeId},
-			proc_req(read,1,1,Manager,User),
+			proc_req(read,1,1,Manager,self()),
 			Manager ! {value,self(),User,Key,V},
 			proc_req(value,{Acc_key,Acc_ctx},Num,Manager,User)
 	end.
@@ -85,7 +86,7 @@ proc_req(write,Manager,User) ->
 			io:format("redirect write ~n",[]),
 			Manager ! {add_server,Addr,NodeId},
 			Manager ! {read,self(),User,[Key],NodeId},
-			proc_req(read,1,1,Manager,User),
+			proc_req(read,1,1,Manager,self()),
 			Manager ! {write,self(),User,[Key,V]},
 			proc_req(write,Manager,User)
 	end.
@@ -94,7 +95,7 @@ proc_req(write,Manager,User) ->
 % Servers = [{Pid,NodeId}] lista ordenada por NodeId
 % Ctx = {User(Pid) -> [{Key,Version}]}
 %TODO atutalizar o ctx
-server_manager(Servers,Ctx) ->
+server_manager(Servers,Ctx,Cache) ->
 	receive
 		{add,V} ->
 			Ctx1 = Ctx, 
@@ -105,7 +106,7 @@ server_manager(Servers,Ctx) ->
 
 			case Flag of
 				true -> ok;
-				false -> connect_server(Addr,NodeId,self()) 
+				false -> connect_server(Addr,NodeId,self(),Cache) 
 			end,
 			Ctx1 = Ctx,Servers1 = Servers;
 
@@ -150,9 +151,9 @@ server_manager(Servers,Ctx) ->
 			end,
 			Servers1 = Servers
 	end,
-	server_manager(Servers1,Ctx1).
+	server_manager(Servers1,Ctx1,Cache).
 
-connect_server({Addr,Port},Manager) -> 
+connect_server({Addr,Port},Manager,Cache) -> 
 	{ok, Sock} = chumak:socket(dealer),
 
 	case chumak:connect(Sock, tcp, Addr, Port) of
@@ -162,19 +163,19 @@ connect_server({Addr,Port},Manager) ->
 			{ok,[_,S]} = chumak:recv_multipart(Sock),
 			io:format("First request Multipart: ~p~n",[desserialize(S)]),
 			{redirect,_,NodeId,Addr1} = desserialize(S),
-			connect_server(Addr1,NodeId,Manager);
+			connect_server(Addr1,NodeId,Manager,Cache);
 			%Pid = spawn(fun() -> server(Sock,NodeId,{#{},#{},#{}}) end),
 			%spawn(fun() -> server_recetor(Sock,Pid) end),
 			%Manager ! {add,{Pid,str_int(NodeId)}};
 		{error, Reason} -> io:format("fail to connect socket: Reason ~p~n",[Reason])
 	end.
 
-connect_server({Addr,Port},NodeId,Manager) -> 
+connect_server({Addr,Port},NodeId,Manager,Cache) -> 
 	{ok, Sock} = chumak:socket(dealer),
 	io:format("New Connect ~p~n",[NodeId]),
 	case chumak:connect(Sock, tcp, Addr, Port) of
 		{ok, _} -> 
-			Pid = spawn(fun() -> server(Sock,NodeId,{#{},#{},#{}}) end),
+			Pid = spawn(fun() -> server(Sock,NodeId,{#{},#{},#{}},Cache) end),
 			spawn(fun() -> server_recetor(Sock,Pid) end),
 			Manager ! {add,{Pid,str_int(NodeId)}};
 		{error, Reason} -> io:format("fail to connect socket: Reason ~p~n",[Reason])
@@ -185,7 +186,7 @@ connect_server({Addr,Port},NodeId,Manager) ->
 % KeyB = #{ {Key,version} -> [Pid] }
 % WriteB = #{ Key -> [ {Pid,Value} ] }
 
-server(Sock,NodeId,{VersionB,KeyB,WriteB}) -> 
+server(Sock,NodeId,{VersionB,KeyB,WriteB},Cache) -> 
 	receive
 		{get_version,Ret,Key} -> 
 			case maps:find(Key,VersionB) of
@@ -200,10 +201,15 @@ server(Sock,NodeId,{VersionB,KeyB,WriteB}) ->
 		{get_key,Ret,Key,Version} -> 
 			case maps:find({Key,Version},KeyB) of
 				{ok,Value} -> KeyB1 = maps:put({Key,Version},[Ret|Value],KeyB);
-				error -> String = NodeId ++ "|getKey|" ++ int_str(Key) ++ "|" ++ int_str(Version),
-						 io:format("String sended value ~p~n",[String]),
-			             chumak:send_multipart(Sock,[<<"">>,list_to_binary(String)]),
-			             KeyB1 = maps:put({Key,Version},[Ret],KeyB)
+				error -> 
+					case cache:request(read,Key,Version,Cache) of
+						error ->
+							String = NodeId ++ "|getKey|" ++ int_str(Key) ++ "|" ++ int_str(Version),
+							io:format("String sended value ~p~n",[String]),
+				            chumak:send_multipart(Sock,[<<"">>,list_to_binary(String)]),
+				            KeyB1 = maps:put({Key,Version},[Ret],KeyB);
+						{V,C} -> Ret ! {value,Key,Version,V,C}, KeyB1 = KeyB
+					end 
 			end,
 			Ret_state = {VersionB,KeyB1,WriteB};
 			
@@ -227,12 +233,14 @@ server(Sock,NodeId,{VersionB,KeyB,WriteB}) ->
 
 		{recv, {value,Key,Version,Value,Ctx}} -> 
 			Users = maps:get({Key,Version},KeyB),
+			cache:request(write,Key,Version,{Value,Ctx},Cache),
 			[Pid ! {value,Key,Version,Value,Ctx} || Pid <- Users],
 			KeyB1 = maps:remove({Key,Version},KeyB),
 			Ret_state = {VersionB,KeyB1,WriteB};
 
 		{recv,{insert,Key,Version}} -> 
 			[{Pid,Value}|T] = maps:get(Key,WriteB),
+			cache:request(write,Key,Version,{Value,[{Key,Version}]},Cache),
 			Pid ! {insert,Key,Version},
 			case T of
 				[] -> WriteB1 = maps:remove(Key,WriteB);
@@ -269,7 +277,7 @@ server(Sock,NodeId,{VersionB,KeyB,WriteB}) ->
 		A -> io:format("mensagem n conhecida Server ~p~n",[A]),Ret_state ={VersionB,KeyB,WriteB}
 
 	end,
-	server(Sock,NodeId,Ret_state).
+	server(Sock,NodeId,Ret_state,Cache).
 
 server_recetor(Sock,Pid) ->
 	{ok,[_,Data]} = chumak:recv_multipart(Sock),
