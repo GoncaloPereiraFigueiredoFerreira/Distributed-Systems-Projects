@@ -3,9 +3,12 @@ package chord;
 import chord.hashing.HashingAlgorithm;
 import chord.storage.DataStorage;
 import chord.storage.Version;
+import org.zeromq.ZContext;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 public class Node {
     @Override
@@ -16,7 +19,7 @@ public class Node {
                 ",\n fingers =" + Arrays.toString(fingerTable) +
                 "}\n";
     }
-    private final NodeRequestsInterface nodeRequests = new NodeRequests();
+    private final NodeRequests nodeRequests;
     private Boolean working;
     private final String nodeAddress;
     private final int nodeId;
@@ -24,10 +27,11 @@ public class Node {
     private final int m;
     private final DataStorage dataStorage;
 
-    public Node(int nodeId, String nodeAddress,Boolean isFirst) throws NoSuchAlgorithmException {
+    public Node(int nodeId, String nodeAddress, Boolean isFirst, ZContext context) throws NoSuchAlgorithmException {
         this.working=isFirst; // not mistaken, if not master then it is not working on initialization
         this.nodeId = nodeId;
         this.nodeAddress = nodeAddress;
+        this.nodeRequests = new NodeRequests(context);
         this.dataStorage= new DataStorage(new HashingAlgorithm(1),nodeId);
         this.m = 31;
         this.fingerTable = new Finger[m+1];
@@ -48,8 +52,19 @@ public class Node {
         return nodeId;
     }
 
-    public void joinRing(String startingNode, String loadBalancerAddress){
-        this.fingerTable[1] = nodeRequests.find_successor_request(nodeId,new Finger(null,startingNode));
+    public List<String> getAllAddresses(){
+        List<String> addresses = new ArrayList<>();
+        for (Finger finger : fingerTable) {
+            if(finger!=null){
+                addresses.add(finger.getAddress());
+            }
+        }
+        addresses.add(this.nodeAddress);
+        return addresses;
+    }
+
+    public void joinRing(Integer idDest,String addressDest, String loadBalancerAddress){
+        this.fingerTable[1] = nodeRequests.find_successor_request(nodeId,new Finger(idDest,addressDest));
         working = true;
         nodeRequests.join_complete_Request(loadBalancerAddress,nodeId);
     }
@@ -62,6 +77,9 @@ public class Node {
             next=1;
         }
 
+        if(next==1){
+            nodeRequests.cleanCache(this.getAllAddresses());
+        }
         int result = (int) ((nodeId + Math.pow(2, next - 1)) % Math.pow(2, 31));
         Finger fingerResult = nodeRequests.find_successor_request(result,myFinger());
         boolean stable = fingerResult.equals(fingerTable[next]);

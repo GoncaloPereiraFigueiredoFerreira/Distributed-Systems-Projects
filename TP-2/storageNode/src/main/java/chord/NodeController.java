@@ -7,7 +7,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 public class NodeController implements Runnable{
-    HashSet<Integer> allIds = new HashSet<>();
+    TreeMap<Integer, String> allIds = new TreeMap<>();
     HashSet<Integer> addingNodes = new HashSet<>();
     int basePort;
     int counter = 0;
@@ -33,9 +33,20 @@ public class NodeController implements Runnable{
         }
 
         startChordNode(true);
-        for (int i = 0; i < nExtraStartingNodes; i++) {
-            startChordNode(false);
-        }
+
+        Thread nodesStarter = new Thread(()-> {
+            for (int i = 0; i < nExtraStartingNodes; i++) {
+                while (addingNodes.size() > 0) {
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                startChordNode(false);
+            }
+        });
+        nodesStarter.start();
 
         try (ZContext context = new ZContext()) {
             ZMQ.Socket frontend = context.createSocket(SocketType.REP);
@@ -81,10 +92,10 @@ public class NodeController implements Runnable{
     }
     public void startChordNode(Boolean firstExecution)  {
         String address = "tcp://localhost:" + basePort;
-        List<Integer> ids = generateReplicaIds(address,firstExecution);
+        List<NodeEntry> entrys = generateReplicaEntrys(address,firstExecution);
         Thread thread;
         try {
-            thread = new Thread(new NodeRunner(firstExecution,address, "tcp://localhost:5555",ids,loadBalancerAddress));
+            thread = new Thread(new NodeRunner(firstExecution,address, entrys,loadBalancerAddress));
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
@@ -93,19 +104,35 @@ public class NodeController implements Runnable{
         basePort+=4;
     }
 
-    private List<Integer> generateReplicaIds(String address,Boolean firstExecution){
-        List<Integer> ids = new ArrayList<>();
+    private List<NodeEntry> generateReplicaEntrys(String address,Boolean firstExecution){
+        List<NodeEntry> entrys = new ArrayList<>();
+        Set<Integer> Ids = allIds.keySet();
         for (int i = 0; i <nReplicas; i++) {
             Integer key = hashingAlgorithm.hash(address + i);
-            while (allIds.contains(key)){
+            while (Ids.contains(key)||entrys.stream().map(NodeEntry::getId).toList().contains(key)){
                 key = hashingAlgorithm.hash(address + i + counter++);
             }
 
-            ids.add(key);
-            allIds.add(key);
+            Integer precedingNode = getClosestPrecedingNode(key);
+            if(precedingNode==null)
+                entrys.add(new NodeEntry(address,null,key));
+            else entrys.add(new NodeEntry(allIds.get(precedingNode),precedingNode,key));
             if(!(firstExecution&&i==0))
                 addingNodes.add(key);
         }
-        return ids;
+        for (Integer newId:entrys.stream().map(NodeEntry::getId).toList()){
+            allIds.put(newId,address);
+        }
+        return entrys;
     }
+    public Integer getClosestPrecedingNode(int targetKey) {
+        if(allIds.size()==0)
+            return null;
+        Integer precedingKey = allIds.lowerKey(targetKey);
+        if (precedingKey == null) {
+            precedingKey = allIds.lastKey();
+        }
+        return precedingKey;
+    }
+    //private closestNode()
 }
