@@ -7,28 +7,23 @@ import org.zeromq.*;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class NodeRunner implements Runnable {
-    private final String startingNodeAddress;
     private final String loadBalancerAddress;
     private final Boolean firstExecution;
-    private final Integer defaultNode;
-    private final Map<Integer,Node> nodes;
+    private Integer defaultNode;
+    private ConcurrentHashMap<Integer,Node> nodes;
     private final HashingAlgorithm hashingAlgorithm;
     private final String nodeAddress;
-    public NodeRunner(Boolean firstExecution,String address,String startingNodeAddress,List<Integer> ids,String loadBalancerAddress) throws NoSuchAlgorithmException {
-        this.startingNodeAddress = startingNodeAddress;
+    private final List<NodeEntry> entrys;
+    public NodeRunner(Boolean firstExecution,String address,List<NodeEntry> entrys,String loadBalancerAddress) throws NoSuchAlgorithmException {
         this.nodeAddress = address;
         this.loadBalancerAddress = loadBalancerAddress;
         this.firstExecution = firstExecution;
-
         this.hashingAlgorithm = new HashingAlgorithm(1);
-        defaultNode = ids.get(0);
-        nodes = new HashMap<>();
-        for (Integer nodeId:ids){
-            Boolean isFirst = (firstExecution&& Objects.equals(defaultNode, nodeId));
-            nodes.put(nodeId,new Node(nodeId,address,isFirst));
-        }
+        this.entrys=entrys;
+
     }
     @Override
     public void run() {
@@ -38,9 +33,19 @@ public class NodeRunner implements Runnable {
             frontend.bind(nodeAddress);
 
             Thread newThread = new Thread(() -> {
-                for (Node node : nodes.values()) {
-                    if (!(firstExecution&&node.getNodeId()==defaultNode)) {
-                        node.joinRing(startingNodeAddress,loadBalancerAddress);
+                defaultNode = entrys.get(0).getId();
+
+                nodes = new ConcurrentHashMap<>();
+                for (NodeEntry entry:entrys){
+                    Boolean isFirst = (firstExecution&& Objects.equals(defaultNode, entry.getId()));
+                    try {
+                        Node node = new Node(entry.getId(),nodeAddress,isFirst,context);
+                        if (!(firstExecution&&node.getNodeId()==defaultNode)) {
+                            node.joinRing(entry.getIdDest(),entry.getAddressDest(),loadBalancerAddress);
+                        }
+                        nodes.put(entry.getId(),node);
+                    } catch (NoSuchAlgorithmException e) {
+                        throw new RuntimeException(e);
                     }
                 }
             });
