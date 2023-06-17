@@ -70,9 +70,9 @@ login(Sock) ->
 
 session({Users,All_users,Ban_user,Sessions},Manager) ->
     receive
-        {sessions,Sessions} ->
-            io:format("Sessions: ~p~n",[lists:delete(self(),Sessions)]),
-            Ret = {Users,All_users,Ban_user,Sessions};
+        {sessions,Sessions1} ->
+            io:format("Sessions: ~p~n",[lists:delete(self(),Sessions1)]),
+            Ret = {Users,All_users,Ban_user,lists:delete(self(),Sessions1)};
 
         {request,Pid,T} ->
             {Nome,Trortled,{Num,L,Mean}} = maps:get(Pid,Users),
@@ -99,7 +99,7 @@ session({Users,All_users,Ban_user,Sessions},Manager) ->
                         {Nome,{_,_,Logged},_} -> Logged = Logged,Nome = Nome;
                         {Nome,Logged,_} -> Logged = Logged,Nome = Nome
                     end,
-                    {B,S} = update_request(Value,Ban_user),
+                    {B,S} = update_request(Value,Ban_user,orSet:n_elements(All_users)),
                     case B of
                         add -> 
                             {New_ban,New_delta} = orSet:add(Nome,self(),Acc_ban),
@@ -119,15 +119,20 @@ session({Users,All_users,Ban_user,Sessions},Manager) ->
             Ret = {Users1,All_users,Ban_user1,Sessions};
 
         {login, Pid, Name} ->
-            case orSet:is_element(Name,Ban_user) of
-                true ->
+            case {orSet:is_element(Name,All_users),orSet:is_element(Name,Ban_user)} of
+                {true,_} -> 
+                    Pid ! {leave,"err"},
+                    All_users1 = All_users,
+                    Map = Users;
+                {false,true} ->
                     {All_users1,Delta} = orSet:add(Name,self(),All_users),
-                    Map = maps:put(Pid,{Name,true,{0,[],0}},Users); 
-                false -> 
+                    Map = maps:put(Pid,{Name,true,{0,[],0}},Users),
+                    [Pid_s ! {user_state,Delta} || Pid_s <- Sessions];
+                {false,false} -> 
                     {All_users1,Delta} = orSet:add(Name,self(),All_users),
-                    Map = maps:put(Pid,{Name,false,{0,[],0}},Users)
+                    Map = maps:put(Pid,{Name,false,{0,[],0}},Users),
+                    [Pid_s ! {user_state,Delta} || Pid_s <- Sessions]
             end,
-            [Pid_s ! {user_state,Delta} || Pid_s <- Sessions],
             Ret = {Map,All_users1,Ban_user,Sessions};
             
         {leave, Pid} ->
@@ -152,11 +157,11 @@ session({Users,All_users,Ban_user,Sessions},Manager) ->
     end,
     session(Ret,Manager).
 
-update_request({Nome,T,{Num,List,_}},Ban_user) ->
+update_request({Nome,T,{Num,List,_}},Ban_user,N_user) ->
     Intervale = round(?TIME / ?UPDATE),
     ListR = update_request_ban_state([Num|List],Intervale), 
-    case {T,lists:sum(ListR)/?TIME} of
-        {false,N} when N > ?LIMIT -> {add,{Nome,{true,60,true},{0,ListR,N}}};
+    case {T,lists:sum(ListR)} of
+        {false,N} when N > ?LIMIT -> {add,{Nome,{true,60 + N_user,true},{0,ListR,N}}};
         {false,N} -> {same,{Nome,T,{0,ListR,N}}};
         {{true,Time,Logged},N} when Time > ?UPDATE -> {same,{Nome,{true,Time-?UPDATE,Logged},{0,ListR,N}}};
         {{true,_,_},N} -> {remove,{Nome,false,{0,ListR,N}}};
@@ -177,15 +182,18 @@ user(Sock,Session) ->
         {resp,Data} -> 
             gen_tcp:send(Sock,Data),
             user(Sock,Session);
+        {leave,Data} -> 
+            gen_tcp:send(Sock,Data),
+            gen_tcp:shutdown(Sock,read_write);
         {tcp,_,Data} ->
             inet:setopts(Sock, [{active, once}]),
             Parsed_data = parse_data(Data),
             %io:format("Parsed: ~p~n",[Parsed_data]),
             Send_data = proc_data(Parsed_data), 
-            Session ! Send_data,
             case Send_data of %caso seja uma mensagem que de logout para não continuar o processo 
-                {leave,_} -> ok;
-                _ -> user(Sock,Session)
+                {login,_,_} -> user(Sock,Session);
+                {leave,_} -> Session ! Send_data,ok;
+                _ -> Session ! Send_data,user(Sock,Session)
             end;
         {tcp_closed,_} ->
             io:format("Tcp closed~n",[]),

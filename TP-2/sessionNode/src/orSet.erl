@@ -1,6 +1,6 @@
 -module(orSet).
 
--export([new/0,elements/1,add/3,remove/2,join/1,join/2,is_element/2]).
+-export([new/0,elements/1,add/3,remove/2,join/1,join/2,is_element/2,n_elements/1]).
 
 % orSet = {Map(elem -> Set({id,c[id]})),CasualContext}
 
@@ -12,6 +12,9 @@ elements({Map,_}) ->
 
 is_element(Elem,{Map,_}) ->
 	lists:member(Elem,maps:keys(Map)).
+
+n_elements(Set) ->
+	length(elements(Set)).
 
 add(Elem,Id,{Map,CC}) ->
 	case maps:find(Id,CC) of
