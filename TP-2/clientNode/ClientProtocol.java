@@ -1,5 +1,6 @@
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,25 +42,24 @@ public class ClientProtocol {
     }
     public static boolean deserializeGeneralResponse(byte[] response){
         ByteBuffer bf = ByteBuffer.wrap(response);
-        char o = bf.getChar();
-        char k = bf.getChar();
+        char o = (char)bf.get();
+        char k = (char)bf.get();
         return o == 'o' && k == 'k';
     }
-    public static Map<String,String> deserializeNReads(byte[] response){
-        ByteBuffer bf = ByteBuffer.wrap(response);
+    public static Map<String,String> deserializeNReads(ByteBuffer bf){
         Map<String,String> ret = new HashMap<>();
-        char o = bf.getChar();
-        char k = bf.getChar();
+        char o = (char)bf.get();
+        char k = (char)bf.get();
         if  (o == 'o' && k == 'k'){
-            bf.getChar(); //remove pipe
+            bf.get(); //remove pipe
             while (bf.hasRemaining()){
                 StringBuilder key = new StringBuilder();
                 StringBuilder value = new StringBuilder();
                 char c;
-                while(bf.hasRemaining() && ((c = bf.getChar()) !='|')){
+                while(bf.hasRemaining() && ((c =(char) bf.get()) !='|')){
                     key.append(c);
                 }
-                while(bf.hasRemaining() && ((c = bf.getChar()) !='|')){
+                while(bf.hasRemaining() && ((c = (char)bf.get()) !='|')){
                     value.append(c);
                 }
                 ret.put(key.toString(), value.toString());

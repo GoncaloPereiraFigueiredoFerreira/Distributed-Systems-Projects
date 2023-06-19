@@ -9,7 +9,7 @@ public class ClientBasic {
     public static void main(String[] args){
         InputMenu login = new InputMenu("Please specify your login name","Username");
         String[] sessionServers = new String[]{"Server1","Server2","Server3"};
-        InetSocketAddress[] sessionServersAddress = new InetSocketAddress[]{new InetSocketAddress("0.0.0.0",5555),new InetSocketAddress("0.0.0.0",5556),new InetSocketAddress("0.0.0.0",5557)};
+        InetSocketAddress[] sessionServersAddress = new InetSocketAddress[]{new InetSocketAddress("0.0.0.0",12345),new InetSocketAddress("0.0.0.0",12346),new InetSocketAddress("0.0.0.0",12347)};
         Menu chooseSession = new Menu("Please specify to which server do you wish to connect:",sessionServers);
         String[] actions = new String[]{"Write a key-value", "Read values", "Logout"};
         Menu chooseAction = new Menu("Choose an action",actions);
@@ -49,7 +49,9 @@ public class ClientBasic {
                                     System.out.println("Sent the read request...");
                                     String[] arr = new String[keys.size()];
                                     Map<String,String> read = co.readNValues(keys.toArray(arr));
-                                    //Need to print this out
+                                    if (read != null) {
+                                        System.out.println(read);
+                                    }else {System.out.println("Uma ou mais chaves não existe.\n");}
                                 }
                             }
                             case 3 ->{

@@ -48,7 +48,7 @@ public class ClientOperations {
             System.out.println("Logout response received!");;
     }
 
-    public void writeValue(String key, String value) throws IOException {
+    public Boolean writeValue(String key, String value) throws IOException {
         ByteBuffer bf = ByteBuffer.allocate(200);
         byte[] content = ClientProtocol.serializeWrites(key,value);
         bf.put(content);
@@ -56,10 +56,12 @@ public class ClientOperations {
         socket.write(bf.duplicate());
         bf.clear();
         socket.read(bf);
-        if (ClientProtocol.deserializeGeneralResponse(bf.array())) {
+        Boolean ret = ClientProtocol.deserializeGeneralResponse(bf.array());
+        if (ret) {
             System.out.println("Written <k,v>: (" + key + "," + value + ")");
             result.put(key, value);
         }
+        return ret;
     }
     public Map<String,String> readNValues(String[] keys) throws IOException {
         ByteBuffer bf = ByteBuffer.allocate(200);
@@ -70,7 +72,7 @@ public class ClientOperations {
         bf.clear();
         socket.read(bf);
         bf.flip();
-        Map<String,String> reads = ClientProtocol.deserializeNReads(bf.array());
+        Map<String,String> reads = ClientProtocol.deserializeNReads(bf);
         if (reads!=null){
             this.result.putAll(reads);
             return reads;

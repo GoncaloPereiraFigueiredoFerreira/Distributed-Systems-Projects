@@ -2,7 +2,7 @@
 
 -export([start/0,request/3,hash/1]).
 
--define(LIMIT_CONN, 1).
+-define(LIMIT_CONN, 50).
 
 % contexto = Lista de {Key,Version}
 

@@ -3,23 +3,23 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 
 public class ClientTest {
     private String[] randomKeyNames = new String[]{
-            "pão de forma","bolachas maria","brioche","broa",
-            "croisant","baguete","bolo do caco","pão de água",
-            "tostas","pretzels", "pão de ló", "pão integral",
-            "papo seco", "pão alentejano"};
+            "pao de forma","bolachas maria","brioche","broa",
+            "croisant","baguete","bolo do caco","pao de água",
+            "tostas","pretzels", "pao de lo", "pao integral",
+            "papo seco", "pao alentejano"};
     private String[] randomValueNames = new String[]{
             "queijo","fiambre","manteiga","manteiga de amendoim",
             "geleia","nutella"
     };
+
+    private InetSocketAddress addr = new InetSocketAddress("0.0.0.0",12345);
+    private InetSocketAddress addr1 = new InetSocketAddress("0.0.0.0",12346);
 
     private boolean sameMap(Map<String,String> m1, Map<String,String> m2) {
         return m1.entrySet().equals(m2.entrySet());
@@ -28,32 +28,34 @@ public class ClientTest {
 
     @Test
     public void simpleTest() throws IOException {
-        ClientOperations co1 = new ClientOperations(null);
-        co1.writeValue("pão","manteiga");
-        co1.readNValues(new String[]{"pão"});
+        ClientOperations co1 = new ClientOperations(this.addr);
+        co1.login("test");
+        co1.writeValue("pao","manteiga");
+        co1.readNValues(new String[]{"pao"});
         HashMap<String,String> expected = new HashMap<>();
-        expected.put("pão","manteiga");
+        expected.put("pao","manteiga");
         co1.logout();
-        assert sameMap(expected,co1.returnResults());
+        var result = co1.returnResults();
+        assert sameMap(expected,result);
     }
 
     @Test
     public void multipleReadsTest() throws IOException{
         // Fill the storage
-        ClientOperations co1 = new ClientOperations(null);
+        ClientOperations co1 = new ClientOperations(this.addr);
         co1.login("Ganso");
-        co1.writeValue("pão","nutella");
+        co1.writeValue("pao","nutella");
         co1.writeValue("croissant","fiambre");
         co1.writeValue("baguete","queijo");
         co1.writeValue("broa","mel");
 
 
         // Diferent server
-        ClientOperations co2 = new ClientOperations( null);
-        co1.login("Luis");
-        Map<String,String> read = co2.readNValues(new String[]{"pão","croissant","broa","mel"});
+        ClientOperations co2 = new ClientOperations(this.addr1);
+        co2.login("Luis");
+        Map<String,String> read = co2.readNValues(new String[]{"pao","croissant","broa","baguete"});
         Map<String,String> expected = new HashMap<>();
-        expected.put("pão","nutella");
+        expected.put("pao","nutella");
         expected.put("croissant","fiambre");
         expected.put("baguete","queijo");
         expected.put("broa","mel");
@@ -65,58 +67,73 @@ public class ClientTest {
     @Test
     public void cachedValue() throws IOException{
         // Num primeiro servidor de sessão
-        ClientOperations co1 = new ClientOperations( null);
+        ClientOperations co1 = new ClientOperations( this.addr);
         co1.login("Ganso");
-        co1.writeValue("pão","nutella");
+        co1.writeValue("pao","nutella");
         co1.logout();
 
         // Num segundo servidor de sessão
-        ClientOperations co2 = new ClientOperations(null);
-        co1.login("Ganso");
+        ClientOperations co2 = new ClientOperations(this.addr1);
+        co2.login("Ganso");
         //1st Read
         long start = System.nanoTime();
-        co2.readNValues(new String[]{"pão"});
+        co2.readNValues(new String[]{"pao"});
         long end = System.nanoTime();
-        double elapsed =TimeUnit.NANOSECONDS.toMillis(end-start);
+        double elapsed =TimeUnit.NANOSECONDS.toNanos(end-start);
         System.out.printf("First read finished in: %.5f miliseconds",elapsed);
 
         //2nd Read
         start = System.nanoTime();
-        co2.readNValues(new String[]{"pão"});
+        co2.readNValues(new String[]{"pao"});
         end = System.nanoTime();
-        double elapsed2 = TimeUnit.NANOSECONDS.toMillis(end-start);
-        System.out.printf("Second read finished in: %.5f miliseconds",elapsed);
+        double elapsed2 = TimeUnit.NANOSECONDS.toNanos(end-start);
+        System.out.printf("Second read finished in: %.5f miliseconds",elapsed2);
 
         assert elapsed2 < elapsed;
     }
 
 
     @Test
-    public void throttledTest() throws IOException{
-        ClientOperations co1 = new ClientOperations(null);
-        for (int i =0; i<200; i++){
-            co1.writeValue("pão","manteiga");
+    public void throttledTest() throws IOException, InterruptedException {
+        int n = 0;
+        ClientOperations co1 = new ClientOperations(this.addr);
+        co1.login("Ganso");
+
+        for(int i = 0; i < 1001;i++){
+            co1.writeValue("pao","manteiga");
         }
-        // TODO: Check throttled
+
+        Thread.sleep(2000);
+
+        while (co1.writeValue("pao","manteiga")){
+            n = n + 1;
+        }
+
+        co1.logout();
+        assert n == 100;
     }
 
 
     @Test
     public void CausalCoherenceTest() throws IOException{
-        ClientOperations co1 = new ClientOperations(null);
-        ClientOperations co2 = new ClientOperations(null);
-        co1.writeValue("pão","manteiga");
+        ClientOperations co1 = new ClientOperations(this.addr);
+        ClientOperations co2 = new ClientOperations(this.addr);
+        co1.login("Ganso");
+        co2.login("Luis");
+        co1.writeValue("pao","manteiga");
+        co1.writeValue("baguete","queijo");
         new Thread(()->{
             try {
-                co2.writeValue("pão","fiambre");
+                co2.writeValue("pao","fiambre");
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }).start();
-        co1.readNValues(new String[]{"pão"});
+        co1.readNValues(new String[]{"pao","baguete"});
         // Test expected
         HashMap<String,String> expected = new HashMap<>();
-        expected.put("pão","manteiga");
+        expected.put("pao","manteiga");
+        expected.put("baguete","queijo");
         assert sameMap(expected,co1.returnResults());
     }
 
@@ -171,7 +188,7 @@ public class ClientTest {
         for (int i =0; i<CLIENT_NUMBER; i++){
             int session = random.nextInt(sessions.size())-1;
             int profile = random.nextInt(4);
-            ClientOperations c = new ClientOperations(null);
+            ClientOperations c = new ClientOperations(this.addr);
             switch (profile){
                 case 1 ->{
                     new Thread(()->{

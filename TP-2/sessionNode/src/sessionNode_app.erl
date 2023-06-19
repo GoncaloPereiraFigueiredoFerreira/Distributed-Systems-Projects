@@ -55,7 +55,7 @@ login(Sock) ->
             inet:setopts(Sock, [{active, once}]),
             case proc_data(parse_data(Data)) of
                 {login,Pid,Name} -> gen_tcp:send(Sock, "ok"),{login,Pid,Name};
-                _ -> gen_tcp:send(Sock, "ok"),login(Sock)
+                A -> gen_tcp:send(Sock, "err"),login(Sock)
             end
     end.
 
@@ -77,7 +77,7 @@ session({Users,All_users,Ban_user,Sessions},Manager) ->
         {request,Pid,T} ->
             {Nome,Trortled,{Num,L,Mean}} = maps:get(Pid,Users),
                 case {Trortled,Num} of
-                    {false,Num} ->  
+                    {false,Num} when (Num + Mean) < ?LIMIT ->  
                         request:request(T,Pid,Manager),
                         Map = maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users);
                     {{true,_,_},Num} when Num < ?MAX_MESSAGE ->
@@ -161,7 +161,7 @@ update_request({Nome,T,{Num,List,_}},Ban_user,N_user) ->
     Intervale = round(?TIME / ?UPDATE),
     ListR = update_request_ban_state([Num|List],Intervale), 
     case {T,lists:sum(ListR)} of
-        {false,N} when N > ?LIMIT -> {add,{Nome,{true,60 + N_user,true},{0,ListR,N}}};
+        {false,N} when N >= ?LIMIT -> {add,{Nome,{true,60 + N_user,true},{0,ListR,N}}};
         {false,N} -> {same,{Nome,T,{0,ListR,N}}};
         {{true,Time,Logged},N} when Time > ?UPDATE -> {same,{Nome,{true,Time-?UPDATE,Logged},{0,ListR,N}}};
         {{true,_,_},N} -> {remove,{Nome,false,{0,ListR,N}}};
@@ -207,7 +207,7 @@ user(Sock,Session) ->
 proc_data(Data) ->
     case Data of
         ["li",Name|_] -> 
-            io:format("recebeu login~n",[]),
+            %io:format("recebeu login ~p~n",[Name]),
             {login,self(),Name};
         ["lo"|_] -> 
             %io:format("recebeu logout~n",[]),
