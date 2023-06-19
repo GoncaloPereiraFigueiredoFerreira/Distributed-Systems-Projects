@@ -60,7 +60,7 @@ public class Node {
             }
         }
         addresses.add(this.nodeAddress);
-        return addresses;
+        return addresses.stream().distinct().collect(Collectors.toList());
     }
 
     public void joinRing(Integer idDest,String addressDest, String loadBalancerAddress){
