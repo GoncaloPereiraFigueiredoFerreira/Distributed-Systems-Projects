@@ -222,7 +222,7 @@ proc_data(Data) ->
         ["w"|T] -> 
             %io:format("recebeu write~n",[]),
             {request,self(),{write,T}};
-        ["a|d"|T] -> 
+        ["a","d"|T] -> 
             {add_node,self()};
         _ -> 
             io:format("recebeu mensagem n conhecida ~p~n",[Data]),

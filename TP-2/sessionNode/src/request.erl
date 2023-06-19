@@ -22,8 +22,8 @@ request(add_node,User,_) ->
 			chumak:send_multipart(Sock,[<<"">>,<<"null|add_node">>]),
 			{ok,[_,S]} = chumak:recv_multipart(Sock),
 			case S of
-				"ACK" -> User ! {resp,"ok"};
-				"NACK" -> User ! {resp,"err"}
+				<<"ACK">> -> User ! {resp,"ok"};
+				<<"NACK">> -> User ! {resp,"err"}
 			end;
 		{error, Reason} -> io:format("fail to connect socket: Reason ~p~n",[Reason])
 	end;
