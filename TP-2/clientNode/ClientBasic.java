@@ -11,7 +11,7 @@ public class ClientBasic {
         String[] sessionServers = new String[]{"Server1","Server2","Server3"};
         InetSocketAddress[] sessionServersAddress = new InetSocketAddress[]{new InetSocketAddress("0.0.0.0",12345),new InetSocketAddress("0.0.0.0",12346),new InetSocketAddress("0.0.0.0",12347)};
         Menu chooseSession = new Menu("Please specify to which server do you wish to connect:",sessionServers);
-        String[] actions = new String[]{"Write a key-value", "Read values", "Logout"};
+        String[] actions = new String[]{"Write a key-value", "Read values", "Add new data server","Logout"};
         Menu chooseAction = new Menu("Choose an action",actions);
         InputMenu keyInput = new InputMenu("Input a key","key");
         InputMenu valueInput = new InputMenu("Input a value", "value");
@@ -24,7 +24,8 @@ public class ClientBasic {
                 try {
                     ClientOperations co = new ClientOperations(sessionServersAddress[chooseSession.getOption()]);
                     co.login(user);
-                    while(chooseAction.getOption()!=-1 && chooseAction.getOption() != 3 ) {
+                    boolean logged = true;
+                    while(chooseAction.getOption()!=-1 && logged) {
                         chooseAction.executa();
                         switch (chooseAction.getOption()) {
                             case 1 -> {
@@ -54,8 +55,13 @@ public class ClientBasic {
                                     }else {System.out.println("Uma ou mais chaves não existe.\n");}
                                 }
                             }
-                            case 3 ->{
+                            case 3 -> {
+                                // Add server
+                                co.addDataServer();
+                            }
+                            case 4 ->{
                                 co.logout();
+                                logged=false;
                             }
 
                         }

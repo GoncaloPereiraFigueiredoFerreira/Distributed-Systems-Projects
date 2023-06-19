@@ -81,6 +81,23 @@ public class ClientOperations {
         //
     }
 
+    public Boolean addDataServer() throws IOException {
+        ByteBuffer bf = ByteBuffer.allocate(200);
+        byte[] content = ClientProtocol.serializeAddNode();
+        bf.put(content);
+        bf.flip();
+        socket.write(bf.duplicate());
+        bf.clear();
+        socket.read(bf);
+        bf.flip();
+        Boolean added = ClientProtocol.deserializeGeneralResponse(bf.array());
+        if (added) {
+            System.out.println("Server was added");
+        }
+        else System.out.println("Server was not added");
+        return added;
+    }
+
 
 
 

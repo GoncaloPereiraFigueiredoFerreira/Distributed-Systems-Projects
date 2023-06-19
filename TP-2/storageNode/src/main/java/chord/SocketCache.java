@@ -48,9 +48,7 @@ public class SocketCache {
         try {
             for (Map.Entry<String, LockedSocket> entry : cache.entrySet()) {
                 String key = entry.getKey();
-                LockedSocket value = entry.getValue();
                 if (!keys.contains(key)) {
-                    value.destroy(context);
                     keysToRemove.add(key);
                 }
             }
@@ -62,6 +60,7 @@ public class SocketCache {
             readWriteLock.writeLock().lock();
             try{
                 for (String key : keysToRemove) {
+                    cache.get(key).destroy(context);
                     cache.remove(key);
                 }
             } finally {

@@ -132,18 +132,21 @@ public class NodeRunner implements Runnable {
     private String processMessage(String requestString) {
         String[] values = requestString.split("\\|");
         Integer wantedNode;
-        if(Objects.equals(values[0], "null"))
-            wantedNode=defaultNode;
+        boolean resendId=false;
+        if(Objects.equals(values[0], "null")) {
+            wantedNode = defaultNode;
+            resendId=true;
+        }
         else wantedNode = Integer.parseInt(values[0]);
 
 
         String[] processedValues = new String[values.length - 1];
         System.arraycopy(values, 1, processedValues, 0, processedValues.length);
 
-        return processMessageContent(processedValues,nodes.get(wantedNode));
+        return processMessageContent(processedValues,nodes.get(wantedNode),resendId);
     }
 
-    private String processMessageContent(String[] values,Node workingNode) {
+    private String processMessageContent(String[] values,Node workingNode,boolean resendId) {
         switch (values[0]) {
             case "find_successor" -> {
                 System.out.println("Node address: "+ this.nodeAddress  + ":received find_successor");
@@ -169,6 +172,8 @@ public class NodeRunner implements Runnable {
             }
             case "insertKey" -> {
                 String key = values[1];
+                if(resendId)
+                    return key+ "|successor|" + workingNode.getNodeId() + "|" + workingNode.getNodeAddress();
                 int hashValue = hashingAlgorithm.hash(key);
                 if(workingNode.isRightSuccessor(hashValue)) { //Returns index of version inserted
                     return key+"|"+ workingNode.insertKey(values[1], Version.fromStrings(Arrays.copyOfRange(values, 2, values.length))) + "|inserted";
@@ -180,6 +185,8 @@ public class NodeRunner implements Runnable {
             }
             case "getLastVersionKey" -> {
                 String key = values[1];
+                if(resendId)
+                    return key+ "|successor|" + workingNode.getNodeId() + "|" + workingNode.getNodeAddress();
                 int hashValue = hashingAlgorithm.hash(key);
                 if(workingNode.isRightSuccessor(hashValue)) {
                     return key+"|"+ workingNode.getLastKeyVersion(key);
@@ -191,6 +198,8 @@ public class NodeRunner implements Runnable {
             }
             case "getKey" -> {
                 String key = values[1];
+                if(resendId)
+                    return key+ "|successor|" + workingNode.getNodeId() + "|" + workingNode.getNodeAddress();
                 int hashValue = hashingAlgorithm.hash(key);
                 if(workingNode.isRightSuccessor(hashValue)) {
                     int version = Integer.parseInt(values[2]);

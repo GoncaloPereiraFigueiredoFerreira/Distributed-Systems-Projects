@@ -63,7 +63,11 @@ public class Node {
         return addresses.stream().distinct().collect(Collectors.toList());
     }
 
-    public void joinRing(Integer idDest,String addressDest, String loadBalancerAddress){
+    public String getNodeAddress() {
+        return nodeAddress;
+    }
+
+    public void joinRing(Integer idDest, String addressDest, String loadBalancerAddress){
         this.fingerTable[1] = nodeRequests.find_successor_request(nodeId,new Finger(idDest,addressDest));
         working = true;
         nodeRequests.join_complete_Request(loadBalancerAddress,nodeId);

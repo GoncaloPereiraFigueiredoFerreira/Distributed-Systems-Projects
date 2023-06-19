@@ -25,27 +25,29 @@ public class DataStorage {
     }
 
     public void insertKey(List<Dependencie> dependencies, String key, String value){
+        readWriteLock.writeLock().lock();
         try {
-            readWriteLock.writeLock().lock();
             Version newVersion = new Version(dependencies,value);
             if(!map.containsKey(key)){
                 map.put(key,new ArrayList<>());
             }
-            List<Version> versionList = map.get(key);
+            List<Version> versionList = new ArrayList<>(map.get(key).stream().toList());
             versionList.add(newVersion);
+            map.put(key,versionList);
         }finally {
             readWriteLock.writeLock().unlock();
         }
     }
 
     public int insertKey(String key, Version version){
+        readWriteLock.writeLock().lock();
         try {
-            readWriteLock.writeLock().lock();
             if(!map.containsKey(key)){
                 map.put(key,new ArrayList<>());
             }
-            List<Version> versionList = map.get(key);
+            List<Version> versionList = new ArrayList<>(map.get(key).stream().toList());
             versionList.add(version);
+            map.put(key,versionList);
             return versionList.size()-1;
         }finally {
             readWriteLock.writeLock().unlock();
@@ -53,8 +55,8 @@ public class DataStorage {
     }
 
     public Version getKey(String key,int version){
+        readWriteLock.readLock().lock();
         try {
-            readWriteLock.readLock().lock();
             if(map.containsKey(key)){
                 List<Version> versionList = this.map.get(key);
                 if(versionList.size()>version)
@@ -68,8 +70,8 @@ public class DataStorage {
     }
 
     public Version getKey(String key){
+        readWriteLock.readLock().lock();
         try {
-            readWriteLock.readLock().lock();
             if(map.containsKey(key)){
                 List<Version> versionList = this.map.get(key);
                 return versionList.get(versionList.size()-1);
@@ -82,8 +84,8 @@ public class DataStorage {
     }
 
     public int getLastKeyVersion(String key){
+        readWriteLock.readLock().lock();
         try {
-            readWriteLock.readLock().lock();
             if(map.containsKey(key)){
                 List<Version> versionList = this.map.get(key);
                 return versionList.size()-1;
@@ -96,8 +98,8 @@ public class DataStorage {
     }
 
     public Map<String,List<Version>> moveKeys(int id) {
+        readWriteLock.writeLock().lock();
         try {
-            readWriteLock.writeLock().lock();
             Map<String,List<Version>> keysToChange = new HashMap<>();
             for(Map.Entry<String,List<Version>> entry:map.entrySet()){
                 if(isInRange(id,hashingAlgorithm.hash(entry.getKey()),nodeId)){

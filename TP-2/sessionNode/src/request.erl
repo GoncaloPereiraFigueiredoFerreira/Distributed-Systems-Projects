@@ -236,6 +236,7 @@ server(Sock,NodeId,{VersionB,KeyB,WriteB},Cache) ->
 					case cache:request(read,Key,Version,Cache) of
 						error ->
 							String = NodeId ++ "|getKey|" ++ int_str(Key) ++ "|" ++ int_str(Version),
+							io:format("~p~n",[String]),
 				            chumak:send_multipart(Sock,[<<"">>,list_to_binary(String)]),
 				            KeyB1 = maps:put({Key,Version},[Ret],KeyB);
 						{V,C} -> Ret ! {value,Key,Version,V,C}, KeyB1 = KeyB
@@ -247,6 +248,7 @@ server(Sock,NodeId,{VersionB,KeyB,WriteB},Cache) ->
 			case maps:find(Key,WriteB) of
 				{ok,Value_dic} -> WriteB1 = maps:put(Key,Value_dic ++ [{Ret,Value}],WriteB);
 				error -> String = NodeId ++ "|insertKey|" ++ serialize_version(Key,Value,Ctx), 
+						 io:format("~p~n",[String]),
 			             chumak:send_multipart(Sock,[<<"">>,list_to_binary(String)]),
 			             WriteB1 = maps:put(Key,[{Ret,Value}],WriteB)
 			end,

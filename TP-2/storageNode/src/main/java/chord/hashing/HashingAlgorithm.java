@@ -52,26 +52,9 @@ public class HashingAlgorithm {
         // Convert the truncated byte array to an integer
         int hashValue = 0;
         for (byte b : truncatedArray) {
-            hashValue = (hashValue << 8) | (b & 0xFF);
+            hashValue = ((hashValue << 8) | (b & 0xFF)) & 0x7FFFFFFF;
         }
 
         return Math.abs(hashValue);
     }
-
-    public Integer hash(Integer input) {
-        byte[] byteArray = messageDigest.digest(ByteBuffer.allocate(4).putInt(input).array());
-
-        // Take the first 4 bytes from the byte array
-        byte[] truncatedArray = new byte[4];
-        System.arraycopy(byteArray, 0, truncatedArray, 0, 4);
-
-        // Convert the truncated byte array to an integer
-        int hashValue = 0;
-        for (byte b : truncatedArray) {
-            hashValue = (hashValue << 8) | (b & 0xFF);
-        }
-
-        return Math.abs(hashValue);
-    }
-
 }

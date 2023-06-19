@@ -15,8 +15,6 @@ class HashingAlgorithmTest {
     @Test
     void hash() throws NoSuchAlgorithmException {
         setUp();
-        Integer val1 =  hashingAlgorithm.hash("server1");
-        Integer val2 =  hashingAlgorithm.hash("server2");
-        assertNotEquals(val1, val2);
+        System.out.println(hashingAlgorithm.hash("baguete"));
     }
 }

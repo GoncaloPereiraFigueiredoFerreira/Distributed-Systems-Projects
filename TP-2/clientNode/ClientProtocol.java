@@ -19,6 +19,13 @@ public class ClientProtocol {
         bf.flip();
         return bf.array();
     }
+
+    public static byte[] serializeAddNode() {
+        ByteBuffer bf = ByteBuffer.allocate(4);
+        bf.put("a|d\n".getBytes(StandardCharsets.UTF_8));
+        bf.flip();
+        return bf.array();
+    }
     public static byte[] serializeWrites(String key,String value){
         ByteBuffer bf = ByteBuffer.allocate(200);
         bf.put("w|".getBytes(StandardCharsets.UTF_8));
