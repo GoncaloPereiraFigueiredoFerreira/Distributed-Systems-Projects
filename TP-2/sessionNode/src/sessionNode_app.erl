@@ -152,7 +152,11 @@ session({Users,All_users,Ban_user,Sessions},Manager) ->
 
         {ban_state, Delta} -> 
             Ban_user1 = orSet:join(Delta,Ban_user),
-            Ret = {Users,All_users,Ban_user1,Sessions}
+            Ret = {Users,All_users,Ban_user1,Sessions};
+
+        {add_node,Pid} -> 
+            request:request(add_node,Pid,Manager),
+            Ret = {Users,All_users,Ban_user,Sessions}
 
     end,
     session(Ret,Manager).
@@ -218,6 +222,8 @@ proc_data(Data) ->
         ["w"|T] -> 
             %io:format("recebeu write~n",[]),
             {request,self(),{write,T}};
+        ["a|d"|T] -> 
+            {add_node,self()};
         _ -> 
             io:format("recebeu mensagem n conhecida ~p~n",[Data]),
             {Data}

@@ -1,6 +1,6 @@
 -module(sessionManager).
 
--export([start/0,add_session/1,add_session/1,create_session/1]).
+-export([start/0,add_session/1,create_session/1]).
 
 start() -> 
 	register(?MODULE,spawn(fun() -> sessionManager([]) end)),

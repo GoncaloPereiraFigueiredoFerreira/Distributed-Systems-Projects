@@ -14,6 +14,21 @@ start() ->
 	connect_server({"localhost",5555},Ret,Cache),
 	Ret.
 
+request(add_node,User,_) -> 
+	{ok, Sock} = chumak:socket(dealer),
+
+	case chumak:connect(Sock, tcp, "localhost", 5550) of
+		{ok, _} -> 
+			chumak:send_multipart(Sock,[<<"">>,<<"null|add_node">>]),
+			{ok,[_,S]} = chumak:recv_multipart(Sock),
+			case S of
+				"ACK" -> User ! {resp,"ok"};
+				"NACK" -> User ! {resp,"err"}
+			end;
+		{error, Reason} -> io:format("fail to connect socket: Reason ~p~n",[Reason])
+	end;
+
+
 request({Mode,Dados},User,M) -> 
 	case Mode of
 		read -> Pid = spawn(fun() -> proc_req(read,length(Dados),length(Dados),M,User) end);
@@ -24,7 +39,7 @@ request({Mode,Dados},User,M) ->
 proc_req(read,0,Recv,Manager,User,true) -> 
 	proc_req(value,{[],[]},Recv,Manager,User);
 
-proc_req(read,0,Recv,Manager,User,false) -> ok;
+proc_req(read,0,_,_,_,false) -> ok;
 
 proc_req(read,Waiting,Recv,Manager,User,Flag) ->
 	receive
@@ -163,7 +178,7 @@ server_manager(Servers,Ctx,Cache) ->
 	end,
 	server_manager(Servers1,Ctx1,Cache).
 
-connect_server({Addr,Port},Manager,Cache) -> 
+connect_server({Addr,Port},Manager,_) -> 
 	{ok, Sock} = chumak:socket(dealer),
 
 	case chumak:connect(Sock, tcp, Addr, Port) of
@@ -178,7 +193,7 @@ connect_server({Addr,Port},Manager,Cache) ->
 		{error, Reason} -> io:format("fail to connect socket: Reason ~p~n",[Reason])
 	end.
 
-connect_server({Addr,Port},NodeId,Manager,Cache) -> 
+connect_server({Addr,Port},NodeId,_,Cache) -> 
 	{ok, Sock} = chumak:socket(dealer),
 	case chumak:connect(Sock, tcp, Addr, Port) of
 		{ok, _} -> 
@@ -337,9 +352,9 @@ server_range(Elem,[{Pid,N}|T],H) ->
 
 server_range(_,[],H) -> H.
 
-server_pid(NodeId,[{Pid,_}]) -> Pid;
-server_pid(NodeId,[{Pid,NodeId}|T]) -> Pid;
-server_pid(NodeId,[A|T]) ->server_pid(NodeId,T).
+server_pid(_,[{Pid,_}]) -> Pid;
+server_pid(NodeId,[{Pid,NodeId}|_]) -> Pid;
+server_pid(NodeId,[_|T]) ->server_pid(NodeId,T).
 
 
 % Recebida mensagem
