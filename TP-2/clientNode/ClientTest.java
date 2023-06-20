@@ -80,14 +80,14 @@ public class ClientTest {
         co2.readNValues(new String[]{"pao"});
         long end = System.nanoTime();
         double elapsed =TimeUnit.NANOSECONDS.toNanos(end-start);
-        System.out.printf("First read finished in: %.5f miliseconds",elapsed);
+        System.out.printf("First read finished in: %.5f nanoseconds\n",elapsed);
 
         //2nd Read
         start = System.nanoTime();
         co2.readNValues(new String[]{"pao"});
         end = System.nanoTime();
         double elapsed2 = TimeUnit.NANOSECONDS.toNanos(end-start);
-        System.out.printf("Second read finished in: %.5f miliseconds",elapsed2);
+        System.out.printf("Second read finished in: %.5f nanoseconds\n",elapsed2);
 
         assert elapsed2 < elapsed;
     }
@@ -99,8 +99,9 @@ public class ClientTest {
         ClientOperations co1 = new ClientOperations(this.addr);
         co1.login("Ganso");
 
-        for(int i = 0; i < 1001;i++){
+        for(int i = 0; i < 60000;i++){
             co1.writeValue("pao","manteiga");
+            System.out.println(i);
         }
 
         Thread.sleep(2000);
@@ -113,28 +114,44 @@ public class ClientTest {
         assert n == 100;
     }
 
-
     @Test
-    public void CausalCoherenceTest() throws IOException{
+    public void KeyPlacementChange() throws IOException{
         ClientOperations co1 = new ClientOperations(this.addr);
-        ClientOperations co2 = new ClientOperations(this.addr);
+        ClientOperations co2 = new ClientOperations(this.addr1);
         co1.login("Ganso");
-        co2.login("Luis");
         co1.writeValue("pao","manteiga");
-        co1.writeValue("baguete","queijo");
-        new Thread(()->{
-            try {
-                co2.writeValue("pao","fiambre");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }).start();
-        co1.readNValues(new String[]{"pao","baguete"});
-        // Test expected
+        for (int i=0;i<20;i++){
+            co1.addDataServer();
+        }
+        co2.login("Bronze");
+        co2.readNValues(new String[]{"pao"});
         HashMap<String,String> expected = new HashMap<>();
         expected.put("pao","manteiga");
-        expected.put("baguete","queijo");
-        assert sameMap(expected,co1.returnResults());
+        assert sameMap(expected,co2.returnResults());
+    }
+
+
+    @Test
+    public void CausalCoherenceTest() throws IOException, InterruptedException {
+        ClientOperations co1 = new ClientOperations(this.addr);
+        ClientOperations co2 = new ClientOperations(this.addr1);
+        co1.login("Ganso");
+        co2.login("Luis");
+        for (int i=0;i<1000;i++){
+            int finalI = i;
+            Thread writter = new Thread(()->{
+                try {
+                    co1.writeValue("pao","manteiga"+ finalI);
+                    co1.writeValue("baguete","queijo"+ finalI);
+                    co1.writeValue("broa","mel"+ finalI);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            writter.start();
+            co2.readNValues(new String[]{"pao","baguete","broa"});
+            writter.join();
+        }
     }
 
     // Maybe should check performance metrics

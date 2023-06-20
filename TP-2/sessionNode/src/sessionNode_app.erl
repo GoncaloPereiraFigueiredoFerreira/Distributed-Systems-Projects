@@ -77,7 +77,7 @@ session({Users,All_users,Ban_user,Sessions},Manager) ->
         {request,Pid,T} ->
             {Nome,Trortled,{Num,L,Mean}} = maps:get(Pid,Users),
                 case {Trortled,Num} of
-                    {false,Num} when (Num + Mean) < ?LIMIT ->  
+                    {false,Num} ->  
                         request:request(T,Pid,Manager),
                         Map = maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users);
                     {{true,_,_},Num} when Num < ?MAX_MESSAGE ->
@@ -164,7 +164,7 @@ session({Users,All_users,Ban_user,Sessions},Manager) ->
 update_request({Nome,T,{Num,List,_}},Ban_user,N_user) ->
     Intervale = round(?TIME / ?UPDATE),
     ListR = update_request_ban_state([Num|List],Intervale), 
-    case {T,lists:sum(ListR)} of
+    case {T,lists:sum(ListR)/60} of
         {false,N} when N >= ?LIMIT -> {add,{Nome,{true,60 + N_user,true},{0,ListR,N}}};
         {false,N} -> {same,{Nome,T,{0,ListR,N}}};
         {{true,Time,Logged},N} when Time > ?UPDATE -> {same,{Nome,{true,Time-?UPDATE,Logged},{0,ListR,N}}};
