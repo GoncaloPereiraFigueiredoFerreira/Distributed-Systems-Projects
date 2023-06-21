@@ -55,7 +55,7 @@ login(Sock) ->
             inet:setopts(Sock, [{active, once}]),
             case proc_data(parse_data(Data)) of
                 {login,Pid,Name} -> gen_tcp:send(Sock, "ok"),{login,Pid,Name};
-                A -> gen_tcp:send(Sock, "err"),login(Sock)
+                _ -> gen_tcp:send(Sock, "err"),login(Sock)
             end
     end.
 
@@ -162,7 +162,6 @@ session({Users,All_users,Ban_user,Sessions},Manager) ->
         {add_node,Pid} -> 
             request:request(add_node,Pid,Manager),
             Ret = {Users,All_users,Ban_user,Sessions}
-
     end,
     session(Ret,Manager).
 
@@ -227,7 +226,7 @@ proc_data(Data) ->
         ["w"|T] -> 
             %io:format("recebeu write~n",[]),
             {request,self(),{write,T}};
-        ["a","d"|T] -> 
+        ["a","d"|_] -> 
             {add_node,self()};
         _ -> 
             io:format("recebeu mensagem n conhecida ~p~n",[Data]),

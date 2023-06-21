@@ -20,6 +20,8 @@ public class ClientTest {
 
     private InetSocketAddress addr = new InetSocketAddress("0.0.0.0",12345);
     private InetSocketAddress addr1 = new InetSocketAddress("0.0.0.0",12346);
+    private InetSocketAddress addr2 = new InetSocketAddress("0.0.0.0",12347);
+
 
     private boolean sameMap(Map<String,String> m1, Map<String,String> m2) {
         return m1.entrySet().equals(m2.entrySet());
@@ -30,8 +32,14 @@ public class ClientTest {
     public void simpleTest() throws IOException {
         ClientOperations co1 = new ClientOperations(this.addr);
         co1.login("test");
+        long start = System.nanoTime();
         co1.writeValue("pao","manteiga");
+        long end = System.nanoTime();
+        System.out.printf("Write finished in: %.5f nanoseconds\n",((double)end-start));
+        start = System.nanoTime();
         co1.readNValues(new String[]{"pao"});
+        end = System.nanoTime();
+        System.out.printf("Read finished in: %.5f nanoseconds\n",((double)end-start));
         HashMap<String,String> expected = new HashMap<>();
         expected.put("pao","manteiga");
         co1.logout();
@@ -163,10 +171,11 @@ public class ClientTest {
         Random random = new Random();
         try {
             for (int i =0; i<10; i++){
-                String key = this.randomKeyNames[random.nextInt(this.randomKeyNames.length+1)-1];
-                String value = this.randomValueNames[random.nextInt(this.randomKeyNames.length+1)-1];
+                String key = this.randomKeyNames[random.nextInt(this.randomKeyNames.length)];
+                String value = this.randomValueNames[random.nextInt(this.randomValueNames.length)];
                 co.writeValue(key,value);
             }
+            co.logout();
         }catch (Exception e) {
                 throw new RuntimeException(e);
         }
@@ -176,22 +185,24 @@ public class ClientTest {
         try {
         for (int i =0; i<10; i++){
             Thread.sleep(random.nextInt(100));
-            String key = this.randomKeyNames[random.nextInt(this.randomKeyNames.length+1)-1];
-            String value = this.randomValueNames[random.nextInt(this.randomKeyNames.length+1)-1];
+            String key = this.randomKeyNames[random.nextInt(this.randomKeyNames.length)];
+            String value = this.randomValueNames[random.nextInt(this.randomValueNames.length)];
             co.writeValue(key,value);
             co.readNValues(new String[]{key});
         }
+        co.logout();
         }catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
     private void profile3(ClientOperations co) {
         Random random = new Random();
-        String key = this.randomKeyNames[random.nextInt(this.randomKeyNames.length+1)-1];
-        String value = this.randomValueNames[random.nextInt(this.randomKeyNames.length+1)-1];
+        String key = this.randomKeyNames[random.nextInt(this.randomKeyNames.length)];
+        String value = this.randomValueNames[random.nextInt(this.randomValueNames.length)];
         try {
             co.writeValue(key,value);
             co.readNValues(new String[]{key});
+            co.logout();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -199,37 +210,59 @@ public class ClientTest {
 
 
     @Test
-    public void heavyLoadTest() throws IOException{
+    public void heavyLoadTest() throws IOException, InterruptedException {
         int CLIENT_NUMBER = 1000;
         Random random = new Random();
         ArrayList<ClientOperations> clientOperations = new ArrayList<>();
         ArrayList<InetSocketAddress> sessions = new ArrayList<>();
-        sessions.add(null);
+        sessions.add(this.addr);
+        sessions.add(this.addr1);
+        sessions.add(this.addr2);
+
+        Thread threads[] = new Thread[CLIENT_NUMBER];
 
         for (int i =0; i<CLIENT_NUMBER; i++){
-            int session = random.nextInt(sessions.size())-1;
-            int profile = random.nextInt(4);
-            ClientOperations c = new ClientOperations(this.addr);
+            int session = random.nextInt(sessions.size());
+            int profile = random.nextInt(1,4);
+            ClientOperations c = new ClientOperations(sessions.get(session));
+            c.login("Test_"+i);
+            int finalI = i;
             switch (profile){
                 case 1 ->{
-                    new Thread(()->{
+                    threads[i] = new Thread(()->{
+                        long start = System.nanoTime();
                         profile1(c);
-                    }).start();
+                        long end = System.nanoTime();
+                        System.out.printf("Profile1 Thread %d time: %.5f nanoseconds\n", finalI,((double)end-start));
+                    });
+                    threads[i].start();
                     break;
                 }
                 case 2 ->{
-                    new Thread(()->{
+                    threads[i] = new Thread(()->{
+                        long start = System.nanoTime();
                         profile2(c);
-                    }).start();
+                        long end = System.nanoTime();
+                        System.out.printf("Profile2 Thread %d time: %.5f nanoseconds\n", finalI,((double)end-start));
+                    });
+                    threads[i].start();
                     break;
                 }
                 case 3 ->{
-                    new Thread(()->{
+                    threads[i] = new Thread(()->{
+                        long start = System.nanoTime();
                         profile3(c);
-                    }).start();
+                        long end = System.nanoTime();
+                        System.out.printf("Profile3 Thread %d time: %.5f nanoseconds\n",finalI,((double)end-start));
+                    });
+                    threads[i].start();
                     break;
                 }
             }
+        }
+        for(int i = 0; i < CLIENT_NUMBER;i++) {
+            threads[i].join();
+            System.out.printf("Thread %d joined\n",i);
         }
     }
 }

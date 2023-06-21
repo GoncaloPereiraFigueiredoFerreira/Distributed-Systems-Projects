@@ -174,7 +174,8 @@ server_manager(Servers,Ctx,Cache) ->
 					New = lists:foldr(fun(Elem,Acc) -> insert_ctx(Elem,Acc) end,[],Value),
 					Ctx1 = maps:put(User,New,Ctx)
 			end,
-			Servers1 = Servers
+			Servers1 = Servers;
+		N -> io:format("Nao existe match -> ~p~n",[N]),Servers1 = Servers,Ctx1 = Ctx
 	end,
 	server_manager(Servers1,Ctx1,Cache).
 
@@ -247,11 +248,12 @@ server(Sock,NodeId,{VersionB,KeyB,WriteB},Cache) ->
 		{write,Ret,Key,Value,Ctx} -> 
 			case maps:find(Key,WriteB) of
 				{ok,Value_dic} -> WriteB1 = maps:put(Key,Value_dic ++ [{Ret,Value}],WriteB);
-				error -> String = NodeId ++ "|insertKey|" ++ serialize_version(Key,Value,Ctx), 
-						 io:format("~p~n",[String]),
-			             chumak:send_multipart(Sock,[<<"">>,list_to_binary(String)]),
-			             WriteB1 = maps:put(Key,[{Ret,Value}],WriteB)
+				error -> WriteB1 = maps:put(Key,[{Ret,Value}],WriteB)
 			end,
+
+			String = NodeId ++ "|insertKey|" ++ serialize_version(Key,Value,Ctx), 
+			io:format("~p~n",[String]),
+			chumak:send_multipart(Sock,[<<"">>,list_to_binary(String)]),
 			Ret_state = {VersionB,KeyB,WriteB1};
 			
 		{recv,{version,Key,Version}} ->
