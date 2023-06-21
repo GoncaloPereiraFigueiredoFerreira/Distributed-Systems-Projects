@@ -75,22 +75,27 @@ session({Users,All_users,Ban_user,Sessions},Manager) ->
             Ret = {Users,All_users,Ban_user,lists:delete(self(),Sessions1)};
 
         {request,Pid,T} ->
-            {Nome,Trortled,{Num,L,Mean}} = maps:get(Pid,Users),
-                case {Trortled,Num} of
-                    {false,Num} ->  
-                        request:request(T,Pid,Manager),
-                        Map = maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users);
-                    {{true,_,_},Num} when Num < ?MAX_MESSAGE ->
-                        request:request(T,Pid,Manager),
-                        Map = maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users);
-                    {true,Num} when Num < ?MAX_MESSAGE ->
-                        request:request(T,Pid,Manager),
-                        Map = maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users);
-                    {_,_} ->
-                        Pid ! {resp,"false"},
-                        Map = maps:put(Pid,{Nome,Trortled,{Num,L,Mean}},Users)
-                end,
-                Ret = {Map,All_users,Ban_user,Sessions};
+            case maps:find(Pid,Users) of
+                {ok,{Nome,Trortled,{Num,L,Mean}}} ->
+                    case {Trortled,Num} of
+                        {false,Num} ->  
+                            request:request(T,Pid,Manager),
+                            Map = maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users);
+                        {{true,_,_},Num} when Num < ?MAX_MESSAGE ->
+                            request:request(T,Pid,Manager),
+                            Map = maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users);
+                        {true,Num} when Num < ?MAX_MESSAGE ->
+                            request:request(T,Pid,Manager),
+                            Map = maps:put(Pid,{Nome,Trortled,{Num + 1,L,Mean}},Users);
+                        {_,_} ->
+                            Pid ! {resp,"false"},
+                            Map = maps:put(Pid,{Nome,Trortled,{Num,L,Mean}},Users)
+                    end,
+                    Ret = {Map,All_users,Ban_user,Sessions};
+                error -> 
+                    self() ! {request,Pid,T},
+                    Ret = {Users,All_users,Ban_user,Sessions}
+            end;
             
         {timer} ->
             {{Ban_user1,Delta},Users1} = 

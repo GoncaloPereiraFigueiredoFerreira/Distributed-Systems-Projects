@@ -104,13 +104,17 @@ public class ClientTest {
             System.out.println(i);
         }
 
-        Thread.sleep(2000);
+        Thread.sleep(1000);
+        co1.logout();
+        Thread.sleep(1000);
 
-        while (co1.writeValue("pao","manteiga")){
+        ClientOperations co2 = new ClientOperations(this.addr1);
+        co2.login("Ganso");
+        while (co2.writeValue("pao","manteiga")){
             n = n + 1;
         }
 
-        co1.logout();
+        co2.logout();
         assert n == 100;
     }
 
