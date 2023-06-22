@@ -31,7 +31,7 @@ public class DataStorage {
             if(!map.containsKey(key)){
                 map.put(key,new ArrayList<>());
             }
-            List<Version> versionList = new ArrayList<>(map.get(key).stream().toList());
+            List<Version> versionList = new ArrayList<>(map.get(key));
             versionList.add(newVersion);
             map.put(key,versionList);
         }finally {
@@ -45,7 +45,7 @@ public class DataStorage {
             if(!map.containsKey(key)){
                 map.put(key,new ArrayList<>());
             }
-            List<Version> versionList = new ArrayList<>(map.get(key).stream().toList());
+            List<Version> versionList = new ArrayList<>(map.get(key));
             versionList.add(version);
             map.put(key,versionList);
             return versionList.size()-1;

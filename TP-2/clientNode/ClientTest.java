@@ -135,10 +135,11 @@ public class ClientTest {
         for (int i=0;i<20;i++){
             co1.addDataServer();
         }
+        co1.writeValue("pao","fiambre");
         co2.login("Bronze");
         co2.readNValues(new String[]{"pao"});
         HashMap<String,String> expected = new HashMap<>();
-        expected.put("pao","manteiga");
+        expected.put("pao","fiambre");
         assert sameMap(expected,co2.returnResults());
     }
 
