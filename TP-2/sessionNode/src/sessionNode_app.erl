@@ -72,6 +72,9 @@ session({Users,All_users,Ban_user,Sessions},Manager) ->
     receive
         {sessions,Sessions1} ->
             io:format("Sessions: ~p~n",[lists:delete(self(),Sessions1)]),
+            Extra = Sessions1 -- Sessions,
+            [Pid_s ! {user_state,All_users} || Pid_s <- Extra],
+            [Pid_s ! {ban_state,Ban_user} || Pid_s <- Extra],
             Ret = {Users,All_users,Ban_user,lists:delete(self(),Sessions1)};
 
         {request,Pid,T} ->
