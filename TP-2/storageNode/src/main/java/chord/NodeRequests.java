@@ -1,18 +1,16 @@
 package chord;
 
-import org.zeromq.SocketType;
 import org.zeromq.ZContext;
-import org.zeromq.ZMQ;
 
 import java.util.List;
 import java.util.Objects;
 
 public class NodeRequests{
-    private SocketCache cache;
+    private final SocketStorage cache;
     private final ZContext context;
     public NodeRequests(ZContext context){
         this.context=context;
-        this.cache = new SocketCache(context);
+        this.cache = new SocketStorage(context);
     }
     public Finger findPredecessor(Finger node) {
         Finger predecessor = null;

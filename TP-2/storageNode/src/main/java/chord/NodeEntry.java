@@ -1,9 +1,9 @@
 package chord;
 
 public class NodeEntry {
-    private String addressDest;
-    private Integer idDest;
-    private int id;
+    private final String addressDest;
+    private final Integer idDest;
+    private final int id;
 
     public NodeEntry(String addressDest, Integer idDest, int id) {
         this.addressDest = addressDest;

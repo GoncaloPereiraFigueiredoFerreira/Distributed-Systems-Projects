@@ -14,12 +14,12 @@ public class NodeController implements Runnable{
     String loadBalancerAddress;
 
     private HashingAlgorithm hashingAlgorithm;
-    private int nExtraStartingNodes;
-    private int nReplicas;
+    private final int nExtraStartingNodes;
+    private final int nVirtualNodes;
 
-    public NodeController(int nExtraStartingNodes, int nReplicas){
+    public NodeController(int nExtraStartingNodes, int nVirtualNodes){
         this.nExtraStartingNodes=nExtraStartingNodes;
-        this.nReplicas=nReplicas;
+        this.nVirtualNodes =nVirtualNodes;
     }
 
     @Override
@@ -107,7 +107,7 @@ public class NodeController implements Runnable{
     private List<NodeEntry> generateReplicaEntrys(String address,Boolean firstExecution){
         List<NodeEntry> entrys = new ArrayList<>();
         Set<Integer> Ids = allIds.keySet();
-        for (int i = 0; i <nReplicas; i++) {
+        for (int i = 0; i < nVirtualNodes; i++) {
             Integer key = hashingAlgorithm.hash(address + i);
             while (Ids.contains(key)||entrys.stream().map(NodeEntry::getId).toList().contains(key)){
                 key = hashingAlgorithm.hash(address + i + counter++);

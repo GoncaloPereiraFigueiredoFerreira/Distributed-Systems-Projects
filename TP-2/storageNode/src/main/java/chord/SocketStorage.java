@@ -5,13 +5,13 @@ import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
-public class SocketCache {
-    private HashMap<String, LockedSocket> cache;
+public class SocketStorage {
+    private final HashMap<String, LockedSocket> storage;
     private final ZContext context;
     private final ReentrantReadWriteLock readWriteLock;
 
-    public SocketCache(ZContext context) {
-        cache = new HashMap<>();
+    public SocketStorage(ZContext context) {
+        storage = new HashMap<>();
         this.context = context;
         this.readWriteLock= new ReentrantReadWriteLock();
     }
@@ -19,15 +19,15 @@ public class SocketCache {
     public String sendAndReceive(String destiny, String nodeId, String message) {
         readWriteLock.readLock().lock();
         try {
-            LockedSocket lockedSocket = cache.get(destiny);
+            LockedSocket lockedSocket = storage.get(destiny);
             if (lockedSocket == null) {
                 readWriteLock.readLock().unlock();
                 readWriteLock.writeLock().lock();
                 try {
-                    lockedSocket = cache.get(destiny);
+                    lockedSocket = storage.get(destiny);
                     if (lockedSocket == null) {
                         lockedSocket = new LockedSocket(context, destiny);
-                        cache.put(destiny, lockedSocket);
+                        storage.put(destiny, lockedSocket);
                     }
                 } finally {
                     readWriteLock.writeLock().unlock();
@@ -46,7 +46,7 @@ public class SocketCache {
 
         readWriteLock.readLock().lock();
         try {
-            for (Map.Entry<String, LockedSocket> entry : cache.entrySet()) {
+            for (Map.Entry<String, LockedSocket> entry : storage.entrySet()) {
                 String key = entry.getKey();
                 if (!keys.contains(key)) {
                     keysToRemove.add(key);
@@ -60,8 +60,8 @@ public class SocketCache {
             readWriteLock.writeLock().lock();
             try{
                 for (String key : keysToRemove) {
-                    cache.get(key).destroy(context);
-                    cache.remove(key);
+                    storage.get(key).destroy(context);
+                    storage.remove(key);
                 }
             } finally {
                 readWriteLock.writeLock().unlock();
@@ -74,7 +74,7 @@ public class SocketCache {
         readWriteLock.readLock().lock();
         try {
             StringBuilder sb = new StringBuilder();
-            for (String key : cache.keySet()) {
+            for (String key : storage.keySet()) {
                 sb.append(key).append(" -> ");
             }
             sb.append("\n");

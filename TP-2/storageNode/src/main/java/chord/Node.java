@@ -127,7 +127,7 @@ public class Node {
         Finger predecessor = fingerTable[0];
         if(predecessor==null || isInRange(n.getId(), predecessor.getId(), nodeId))
             fingerTable[0]=n;
-        return dataStorage.moveKeys(n.getId()); //TODO suss?
+        return dataStorage.moveKeys(n.getId());
     }
 
     public FingerSuccessorPair findSuccessor(int id) {
@@ -136,10 +136,10 @@ public class Node {
         return closestPrecedingNode(id);
     }
 
-    public boolean isRightSuccessor(int id) { //TODO suss?
+    public boolean isRightSuccessor(int id) {
         Finger predecessor = fingerTable[0];
         if(predecessor==null)
-            return true; //TODO Might be wrong
+            return true;
         return isInRange(id, predecessor.getId(), nodeId);
     }
 
