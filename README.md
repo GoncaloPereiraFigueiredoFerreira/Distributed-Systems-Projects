@@ -4,7 +4,7 @@ This repo contains the two projects developed as part of the "Distributed System
 
 ## 1st Project: Causal ordering in a reactive system
 
-Grade: **17/20**
+Grade: **17/20**  
 
 Tech-Stack: *Java*, *ReactiveX*
 
@@ -12,7 +12,7 @@ The main objective for this first project was to develop a software component in
 
 ## 2nd Project: Large Scale Storage System
 
-Grade: **20/20**
+Grade: **20/20**  
 
 Tech-Stack: *Java*, *Erlang*, *ZeroMQ*
 
