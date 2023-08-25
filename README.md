@@ -19,8 +19,8 @@ Tech-Stack: *Java*, *Erlang*, *ZeroMQ*
 For the second project, the group developed a key-value storage, that provides a highly scalable and available service.
 
 The system is composed by 3 layers:
+![image](https://github.com/GoncaloPereiraFigueiredoFerreira/Distributed-Systems-Projects/assets/62027657/7ad2c46a-ff36-4708-903e-be9b91587e7c)
 
-![image](https://github.com/GoncaloPereiraFigueiredoFerreira/Distributed-Systems-Projects/assets/62027657/54c9ce66-426b-42b1-800e-01c6fbd981f1)
 
 - **Client Servers** - a java component, design to present an user with an interface to interact with the storage system. It allows 2 operations: single writes and muliple-key reads.
 - **Session Servers** - intermediate component that moderates user interactions with the data servers. It was developed in Erlang, in a actor based paradigm, to allow easier scalability.
