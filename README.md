@@ -27,4 +27,9 @@ The system is composed by 3 layers:
 - **Storage Servers** - the storage servers were developed in Java, and follow the "Chord" arquitecture. It allows runtime scalability and the creation of multiple virtual nodes.
 
 
+### Contributors
+Gonçalo Ferreira
+Gonçalo Santos
+Luis Silva
+
 
