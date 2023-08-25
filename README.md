@@ -28,8 +28,8 @@ The system is composed by 3 layers:
 
 
 ### Contributors
-Gonçalo Ferreira
-Gonçalo Santos
-Luis Silva
+Gonçalo Ferreira  
+Gonçalo Santos  
+Luis Silva  
 
 
